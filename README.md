@@ -1,54 +1,70 @@
-# Preen
+<div align="center">
+  <img src="assets/preen-banner.svg" alt="Preen Banner" width="760" />
+</div>
 
-Clean, uninstall, analyze and monitor Linux from one app. Preen is built for Ubuntu and Kubuntu and inspired by [Mole](https://github.com/tw93/mole) for macOS.
+<br/>
+
+Clean, uninstall, analyze, and monitor Linux from one application. Preen is built for Ubuntu and Kubuntu and inspired by [Mole](https://github.com/tw93/mole) for macOS.
 
 - **Clean**: removes caches, logs, old snap versions, crash dumps, old kernels, browser and Electron app caches, and developer caches (uv, pnpm, npm, Bun, pip, Gradle, Cargo, Go).
-- **Uninstall**: removes apt, snap, Flatpak and AppImage apps together with their leftovers. Settings stay unless you select them.
-- **Disk**: shows what uses space, folder by folder, and moves things to the Trash.
-- **Projects**: removes rebuildable `node_modules`, `target`, `build`, `.venv` and similar folders.
-- **Installers**: removes `.deb`, `.rpm`, `.run`, `.exe` and similar files from Downloads and Desktop.
-- **Maintenance**: rebuilds caches, flushes DNS, sets snap retention and checks system health.
-- **Overview**: live CPU, memory, disk, network, battery, sensors and the busiest processes.
+- **Uninstall**: removes apt, snap, Flatpak, and AppImage applications together with residual files. Configuration files remain unless specifically selected.
+- **Disk**: inspects disk usage folder by folder and moves items to the Trash.
+- **Projects**: removes rebuildable `node_modules`, `target`, `build`, `.venv`, and similar build directories.
+- **Installers**: cleans leftover `.deb`, `.rpm`, `.run`, `.AppImage`, and `.iso` files from Downloads and Desktop.
+- **Maintenance**: rebuilds font and application menu caches, flushes DNS, configures snap retention, and checks systemd service health.
+- **Overview**: reports CPU load, memory distribution, disk throughput, network traffic, battery health, thermal sensors, and active processes.
 
-Every change is listed for review first. Nothing runs in the background.
+Every removal is presented for review before execution. Nothing runs in the background.
+
+## Interface and screenshots
+
+| Overview & Telemetry | Clean Scan |
+| :---: | :---: |
+| <img src="assets/screenshots/01-overview.png" width="460" alt="Preen Overview" /> | <img src="assets/screenshots/02-clean.png" width="460" alt="Preen Clean" /> |
+| CPU, memory, disk, network, and thermal telemetry | Reclaimable caches, logs, old kernels, and app leftovers |
+
+| Application Uninstaller | Disk Space Explorer |
+| :---: | :---: |
+| <img src="assets/screenshots/03-uninstall.png" width="460" alt="Preen Uninstall" /> | <img src="assets/screenshots/04-disk.png" width="460" alt="Preen Disk Analyzer" /> |
+| Removes apt, snap, Flatpak, and AppImage packages | Hierarchical folder sizes with Trash support |
+
+| Project Build Folders | Downloaded Installers |
+| :---: | :---: |
+| <img src="assets/screenshots/05-projects.png" width="460" alt="Preen Projects Purge" /> | <img src="assets/screenshots/06-installers.png" width="460" alt="Preen Installers" /> |
+| Cleans rebuildable `.next`, `.venv`, and `node_modules` folders | Finds leftover `.deb`, `.rpm`, and `.AppImage` packages |
+
+| System Maintenance | Command Line Interface |
+| :---: | :---: |
+| <img src="assets/screenshots/07-maintenance.png" width="460" alt="Preen Maintenance" /> | <img src="assets/screenshots/00-cli.png" width="460" alt="Preen CLI" /> |
+| Cache rebuilds, DNS flushes, and service diagnostics | Terminal dashboard with human-readable and `--json` outputs |
 
 ## How Preen compares
 
-✅ yes · ◐ partly · ❌ no · – not applicable
-
-| | Preen | BleachBit | btop | CCleaner | Mole |
-|---|:-:|:-:|:-:|:-:|:-:|
+| Capability | Preen | BleachBit | btop | CCleaner (Windows) | Mole (macOS) |
+|---|:---:|:---:|:---:|:---:|:---:|
 | **Platform and interface** | | | | | |
-| Runs on Linux | ✅ | ✅ | ✅ | ❌ Windows, macOS, Android | ❌ macOS (Windows beta) |
-| Desktop app | ✅ KDE (Kirigami) | ✅ GTK | ❌ terminal | ✅ | ◐ separate paid Mac app |
-| Command line with JSON output | ✅ | ◐ no JSON | ❌ | ◐ a few switches | ✅ |
-| Free and open source | ✅ GPL-3 | ✅ GPL-3 | ✅ Apache-2.0 | ❌ freemium | ✅ GPL-3 (CLI) |
+| Runs on Linux | Yes | Yes | Yes | No | No |
+| Desktop app | KDE (Kirigami) | GTK | Terminal | Win32 / Qt | App |
+| Command line with JSON | Yes | No JSON | No | Partial | Yes |
+| License | GPL-3.0 | GPL-3.0 | Apache-2.0 | Proprietary | GPL-3.0 |
 | **Cleaning** | | | | | |
-| App caches, logs, temp files, Trash | ✅ | ✅ | ❌ | ✅ | ✅ |
-| Browser caches | ✅ | ✅ | ❌ | ✅ | ✅ |
-| Browser privacy data (cookies, history, passwords) | ❌ | ✅ | ❌ | ✅ | ❌ |
-| Developer caches (npm, pnpm, uv, pip, Gradle, Cargo, Go) | ✅ | ❌ | ❌ | ❌ | ✅ |
-| Package manager leftovers | ✅ apt, snaps, old kernels | ◐ apt, snaps; no kernels | ❌ | – | ✅ Homebrew |
-| Project build folders (`node_modules`, `target`, `.venv`) | ✅ | ❌ | ❌ | ❌ | ✅ |
-| Downloaded installer files | ✅ | ❌ | ❌ | ❌ | ✅ |
-| Preview before deleting | ✅ | ✅ | – | ✅ | ✅ |
-| Shred files, wipe free space | ❌ | ✅ | ❌ | ✅ | ❌ |
-| **Apps** | | | | | |
-| Uninstall apps with their leftovers | ✅ apt, snap, Flatpak, AppImage | ❌ | ❌ | ◐ runs the app's own uninstaller | ✅ |
-| Startup apps manager | ❌ | ❌ | ❌ | ✅ | ❌ |
-| Software updater | ❌ | ❌ | ❌ | ✅ paid | ❌ |
-| **Disk and system** | | | | | |
-| Disk usage explorer | ✅ | ❌ | ❌ | ✅ | ✅ |
-| Duplicate file finder | ❌ | ❌ | ❌ | ✅ | ❌ |
-| Live CPU, memory, disk and network | ✅ | ❌ | ✅ | ❌ | ✅ |
-| Process list and control | ◐ busiest processes, no kill | ❌ | ✅ tree view, signals | ❌ | ◐ busiest processes |
-| GPU stats | ❌ | ❌ | ✅ | ❌ | ✅ |
-| Temperatures and battery health | ✅ | ❌ | ✅ | ❌ | ✅ |
-| Maintenance (DNS, font and menu caches, SSD trim) | ✅ | ❌ | ❌ | ◐ Windows registry | ✅ |
+| App caches, logs, temp, Trash | Yes | Yes | No | Yes | Yes |
+| Browser caches | Yes | Yes | No | Yes | Yes |
+| Browser privacy data (cookies, passwords) | No | Yes | No | Yes | No |
+| Developer caches (npm, pnpm, uv, pip, Cargo, Go) | Yes | No | No | No | Yes |
+| Package manager leftovers | apt, snaps, kernels | apt, snaps | No | N/A | Homebrew |
+| Project build folders (`node_modules`, `target`) | Yes | No | No | No | Yes |
+| Downloaded installer files | Yes | No | No | No | Yes |
+| Dry-run preview before deleting | Yes | Yes | N/A | Yes | Yes |
+| Shred files, wipe free space | No | Yes | No | Yes | No |
+| **System and processes** | | | | | |
+| Uninstall with leftovers | apt, snap, Flatpak, AppImage | No | No | Uninstaller only | Yes |
+| Disk usage explorer | Yes | No | No | Yes | Yes |
+| Live telemetry (CPU, RAM, Disk, Net) | Yes | No | Yes | No | Yes |
+| Temperatures and battery health | Yes | No | Yes | No | Yes |
+| System maintenance (DNS, font caches, trim) | Yes | No | No | Registry only | Yes |
 
-The CCleaner column is the Windows version. The Mole column is the free command-line tool. Checked November 2026.
-
-Preen does not yet do privacy cleaning, secure wiping, startup apps, duplicate files, process control or GPU stats. For now, use BleachBit for privacy cleaning and wiping, and btop for process control.
+Preen does not handle browser cookies, password databases, secure file wiping, startup applications, duplicate files, or GPU statistics. BleachBit remains suitable for file shredding, and btop for process termination.
 
 ## Install
 
