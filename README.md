@@ -40,31 +40,41 @@ Every removal is presented for review before execution. Nothing runs in the back
 
 ## How Preen compares
 
-| Capability | Preen | BleachBit | btop | CCleaner (Windows) | Mole (macOS) |
-|---|:---:|:---:|:---:|:---:|:---:|
-| **Platform and interface** | | | | | |
-| Runs on Linux | Yes | Yes | Yes | No | No |
-| Desktop app | KDE (Kirigami) | GTK | Terminal | Win32 / Qt | App |
-| Command line with JSON | Yes | No JSON | No | Partial | Yes |
-| License | GPL-3.0 | GPL-3.0 | Apache-2.0 | Proprietary | GPL-3.0 |
-| **Cleaning** | | | | | |
-| App caches, logs, temp, Trash | Yes | Yes | No | Yes | Yes |
-| Browser caches | Yes | Yes | No | Yes | Yes |
-| Browser privacy data (cookies, passwords) | No | Yes | No | Yes | No |
-| Developer caches (npm, pnpm, uv, pip, Cargo, Go) | Yes | No | No | No | Yes |
-| Package manager leftovers | apt, snaps, kernels | apt, snaps | No | N/A | Homebrew |
-| Project build folders (`node_modules`, `target`) | Yes | No | No | No | Yes |
-| Downloaded installer files | Yes | No | No | No | Yes |
-| Dry-run preview before deleting | Yes | Yes | N/A | Yes | Yes |
-| Shred files, wipe free space | No | Yes | No | Yes | No |
-| **System and processes** | | | | | |
-| Uninstall with leftovers | apt, snap, Flatpak, AppImage | No | No | Uninstaller only | Yes |
-| Disk usage explorer | Yes | No | No | Yes | Yes |
-| Live telemetry (CPU, RAM, Disk, Net) | Yes | No | Yes | No | Yes |
-| Temperatures and battery health | Yes | No | Yes | No | Yes |
-| System maintenance (DNS, font caches, trim) | Yes | No | No | Registry only | Yes |
+✅ yes · ◐ partly · ❌ no · – not applicable
 
-Preen does not handle browser cookies, password databases, secure file wiping, startup applications, duplicate files, or GPU statistics. BleachBit remains suitable for file shredding, and btop for process termination.
+| | Preen | BleachBit | btop | CCleaner | Mole |
+|---|:-:|:-:|:-:|:-:|:-:|
+| **Platform and interface** | | | | | |
+| Runs on Linux | ✅ | ✅ | ✅ | ❌ Windows, macOS, Android | ❌ macOS (Windows beta) |
+| Desktop app | ✅ KDE (Kirigami) | ✅ GTK | ❌ terminal | ✅ | ◐ separate paid Mac app |
+| Command line with JSON output | ✅ | ◐ no JSON | ❌ | ◐ a few switches | ✅ |
+| Free and open source | ✅ GPL-3 | ✅ GPL-3 | ✅ Apache-2.0 | ❌ freemium | ✅ GPL-3 (CLI) |
+| **Cleaning** | | | | | |
+| App caches, logs, temp files, Trash | ✅ | ✅ | ❌ | ✅ | ✅ |
+| Browser caches | ✅ | ✅ | ❌ | ✅ | ✅ |
+| Browser privacy data (cookies, history, passwords) | ❌ | ✅ | ❌ | ✅ | ❌ |
+| Developer caches (npm, pnpm, uv, pip, Gradle, Cargo, Go) | ✅ | ❌ | ❌ | ❌ | ✅ |
+| Package manager leftovers | ✅ apt, snaps, old kernels | ◐ apt, snaps; no kernels | ❌ | – | ✅ Homebrew |
+| Project build folders (`node_modules`, `target`, `.venv`) | ✅ | ❌ | ❌ | ❌ | ✅ |
+| Downloaded installer files | ✅ | ❌ | ❌ | ❌ | ✅ |
+| Preview before deleting | ✅ | ✅ | – | ✅ | ✅ |
+| Shred files, wipe free space | ❌ | ✅ | ❌ | ✅ | ❌ |
+| **Apps** | | | | | |
+| Uninstall apps with their leftovers | ✅ apt, snap, Flatpak, AppImage | ❌ | ❌ | ◐ runs the app's own uninstaller | ✅ |
+| Startup apps manager | ❌ | ❌ | ❌ | ✅ | ❌ |
+| Software updater | ❌ | ❌ | ❌ | ✅ paid | ❌ |
+| **Disk and system** | | | | | |
+| Disk usage explorer | ✅ | ❌ | ❌ | ✅ | ✅ |
+| Duplicate file finder | ❌ | ❌ | ❌ | ✅ | ❌ |
+| Live CPU, memory, disk and network | ✅ | ❌ | ✅ | ❌ | ✅ |
+| Process list and control | ◐ busiest processes, no kill | ❌ | ✅ tree view, signals | ❌ | ◐ busiest processes |
+| GPU stats | ❌ | ❌ | ✅ | ❌ | ✅ |
+| Temperatures and battery health | ✅ | ❌ | ✅ | ❌ | ✅ |
+| Maintenance (DNS, font and menu caches, SSD trim) | ✅ | ❌ | ❌ | ◐ Windows registry | ✅ |
+
+The CCleaner column is the Windows version. The Mole column is the free command-line tool. Checked November 2026.
+
+Preen does not yet do privacy cleaning, secure wiping, startup apps, duplicate files, process control or GPU stats. For now, use BleachBit for privacy cleaning and wiping, and btop for process control.
 
 ## Install
 
