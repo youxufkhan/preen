@@ -1,0 +1,1458 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Preen | Linux System Cleaner, Package Uninstaller & Monitor</title>
+  <meta name="description" content="Free, open source Linux system cleaner and package uninstaller for Ubuntu, Kubuntu, and Debian. Clean caches, inspect disk usage, and monitor system telemetry with zero background daemons.">
+  <meta name="author" content="Yousuf Khan">
+  <link rel="canonical" href="https://youxufkhan.github.io/preen/">
+  <link rel="icon" type="image/svg+xml" href="assets/icon.svg">
+
+  <!-- OpenGraph -->
+  <meta property="og:type" content="website">
+  <meta property="og:url" content="https://youxufkhan.github.io/preen/">
+  <meta property="og:title" content="Preen | Linux System Cleaner, Package Uninstaller & Monitor">
+  <meta property="og:description" content="Clean caches, remove packages with leftover files, inspect disk usage, and monitor telemetry on Ubuntu and Debian with zero background daemons.">
+  <meta property="og:image" content="https://youxufkhan.github.io/preen/assets/preen-banner.png">
+  <meta property="og:image:alt" content="Preen Linux System Care Banner">
+
+  <!-- Twitter Card -->
+  <meta name="twitter:card" content="summary_large_image">
+  <meta name="twitter:title" content="Preen | Linux System Cleaner, Package Uninstaller & Monitor">
+  <meta name="twitter:description" content="Clean caches, remove packages with leftover files, inspect disk usage, and monitor telemetry on Ubuntu and Debian with zero background daemons.">
+  <meta name="twitter:image" content="https://youxufkhan.github.io/preen/assets/preen-banner.png">
+  <meta name="twitter:image:alt" content="Preen Linux System Care Banner">
+  <meta name="twitter:creator" content="@youxufkhan">
+
+  <!-- Structured Data: SoftwareApplication -->
+  <script type="application/ld+json">
+  {
+    "@context": "https://schema.org",
+    "@type": "SoftwareApplication",
+    "name": "Preen",
+    "operatingSystem": "Linux",
+    "applicationCategory": "UtilitiesApplication",
+    "description": "Clean, uninstall, analyze, and monitor Linux from one application without background daemons. Built for Ubuntu, Kubuntu, and Debian with Qt 6 Kirigami and Go.",
+    "softwareVersion": "0.1.1",
+    "url": "https://youxufkhan.github.io/preen/",
+    "downloadUrl": "https://github.com/youxufkhan/preen/releases/download/v0.1.1/preen_0.1.1_amd64.deb",
+    "license": "https://www.gnu.org/licenses/gpl-3.0.en.html",
+    "offers": {
+      "@type": "Offer",
+      "price": "0",
+      "priceCurrency": "USD"
+    },
+    "author": {
+      "@type": "Person",
+      "name": "Yousuf Khan",
+      "url": "https://github.com/youxufkhan"
+    }
+  }
+  </script>
+
+  <!-- Structured Data: FAQPage -->
+  <script type="application/ld+json">
+  {
+    "@context": "https://schema.org",
+    "@type": "FAQPage",
+    "mainEntity": [
+      {
+        "@type": "Question",
+        "name": "Does Preen run background daemons or scheduled services?",
+        "acceptedAnswer": {
+          "@type": "Answer",
+          "text": "No. Preen installs no system services, cron jobs, or background watchers. When you exit the application or CLI command, zero processes remain in memory."
+        }
+      },
+      {
+        "@type": "Question",
+        "name": "Which Linux distributions does Preen support?",
+        "acceptedAnswer": {
+          "@type": "Answer",
+          "text": "Preen provides desktop packages for Ubuntu 24.04 and 26.04, Kubuntu with KDE Plasma 6 (Kirigami Qt 6.10), and Debian 12+. Standalone CLI binaries run on any modern Linux distribution including Arch Linux and Fedora."
+        }
+      },
+      {
+        "@type": "Question",
+        "name": "How does Preen protect against accidental deletion?",
+        "acceptedAnswer": {
+          "@type": "Answer",
+          "text": "All deletions pass through internal/safe, which strictly blocks root paths, home folders, SSH keys, GPG keys, and browser credentials. App uninstaller and disk explorer deletions move items to the desktop Trash."
+        }
+      }
+    ]
+  }
+  </script>
+
+  <style>
+    :root {
+      --bg: #070c14;
+      --bg-card: #0b1320;
+      --bg-card-hover: #0f1a2c;
+      --bg-elevated: #111c2e;
+      --border: #1e293b;
+      --border-focus: #00e699;
+      --text: #f8fafc;
+      --text-muted: #94a3b8;
+      --text-dim: #64748b;
+      --accent: #00e699;
+      --accent-hover: #00c784;
+      --accent-glow: rgba(0, 230, 153, 0.18);
+      --cyan: #38bdf8;
+      --cyan-dim: #0284c7;
+      --patreon: #ff424d;
+      --code-bg: #040810;
+      --font-sans: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Inter", Helvetica, Arial, sans-serif;
+      --font-mono: ui-monospace, "SFMono-Regular", Menlo, Monaco, Consolas, "Liberation Mono", monospace;
+    }
+
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+
+    html {
+      scroll-behavior: smooth;
+      background: var(--bg);
+      color: var(--text);
+      font-family: var(--font-sans);
+      font-size: 15px;
+      line-height: 1.6;
+    }
+
+    body {
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+      overflow-x: hidden;
+      background:
+        radial-gradient(ellipse 80% 50% at 50% -20%, rgba(2, 132, 199, 0.15), transparent 70%),
+        radial-gradient(ellipse 60% 30% at 85% 15%, rgba(0, 230, 153, 0.08), transparent 60%),
+        var(--bg);
+    }
+
+    /* Accessibility skip link */
+    .skip-link {
+      position: absolute;
+      top: -40px;
+      left: 20px;
+      background: var(--accent);
+      color: #04121a;
+      padding: 8px 14px;
+      font-weight: 700;
+      border-radius: 4px;
+      z-index: 100;
+      text-decoration: none;
+      transition: top 0.15s ease;
+    }
+    .skip-link:focus {
+      top: 10px;
+    }
+
+    a {
+      color: var(--cyan);
+      text-decoration: none;
+      transition: color 0.15s ease;
+    }
+    a:hover {
+      color: var(--accent);
+    }
+
+    .container {
+      width: min(1120px, 92vw);
+      margin: 0 auto;
+    }
+
+    /* Header */
+    header.site-header {
+      position: sticky;
+      top: 0;
+      z-index: 50;
+      backdrop-filter: blur(12px);
+      -webkit-backdrop-filter: blur(12px);
+      background: rgba(7, 12, 20, 0.85);
+      border-bottom: 1px solid var(--border);
+    }
+
+    .nav-row {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      height: 64px;
+      gap: 16px;
+    }
+
+    .brand {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      color: var(--text);
+      font-size: 17px;
+      font-weight: 700;
+      letter-spacing: -0.2px;
+    }
+    .brand img {
+      width: 28px;
+      height: 28px;
+      display: block;
+    }
+    .brand span.tag {
+      font-size: 11px;
+      font-weight: 600;
+      color: var(--accent);
+      background: rgba(0, 230, 153, 0.1);
+      border: 1px solid rgba(0, 230, 153, 0.25);
+      padding: 1px 6px;
+      border-radius: 4px;
+      margin-left: 2px;
+    }
+
+    nav.site-nav {
+      display: flex;
+      align-items: center;
+      gap: 20px;
+    }
+    nav.site-nav a {
+      color: var(--text-muted);
+      font-size: 14px;
+      font-weight: 500;
+    }
+    nav.site-nav a:hover {
+      color: var(--text);
+    }
+
+    .header-actions {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+
+    /* Buttons */
+    .btn {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      gap: 7px;
+      font-weight: 600;
+      font-size: 13.5px;
+      padding: 8px 16px;
+      border-radius: 8px;
+      cursor: pointer;
+      border: 1px solid transparent;
+      transition: all 0.15s ease;
+      white-space: nowrap;
+      text-decoration: none;
+    }
+    .btn svg {
+      width: 16px;
+      height: 16px;
+      flex-shrink: 0;
+    }
+    .btn-primary {
+      background: var(--accent);
+      color: #04121a;
+      box-shadow: 0 2px 10px rgba(0, 230, 153, 0.25);
+    }
+    .btn-primary:hover {
+      background: var(--accent-hover);
+      color: #04121a;
+      box-shadow: 0 4px 18px rgba(0, 230, 153, 0.35);
+      transform: translateY(-1px);
+    }
+    .btn-secondary {
+      background: var(--bg-card);
+      color: var(--text);
+      border-color: var(--border);
+    }
+    .btn-secondary:hover {
+      background: var(--bg-card-hover);
+      border-color: var(--text-muted);
+      color: var(--text);
+    }
+    .btn-patreon {
+      background: rgba(255, 66, 77, 0.12);
+      color: #ff646e;
+      border-color: rgba(255, 66, 77, 0.3);
+    }
+    .btn-patreon:hover {
+      background: #ff424d;
+      color: #ffffff;
+      border-color: #ff424d;
+    }
+
+    /* Hero */
+    section.hero {
+      padding: 68px 0 36px;
+      text-align: center;
+    }
+    .hero-badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      padding: 4px 14px;
+      background: rgba(56, 189, 248, 0.08);
+      border: 1px solid rgba(56, 189, 248, 0.25);
+      border-radius: 20px;
+      color: var(--cyan);
+      font-size: 12.5px;
+      font-weight: 500;
+      margin-bottom: 22px;
+    }
+    .hero h1 {
+      font-size: clamp(32px, 5.5vw, 54px);
+      font-weight: 800;
+      line-height: 1.15;
+      letter-spacing: -0.8px;
+      color: var(--text);
+      max-width: 840px;
+      margin: 0 auto 20px;
+    }
+    .hero p.lead {
+      font-size: clamp(16px, 2.2vw, 18.5px);
+      color: var(--text-muted);
+      max-width: 680px;
+      margin: 0 auto 30px;
+      line-height: 1.55;
+    }
+
+    .hero-ctas {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 12px;
+      flex-wrap: wrap;
+      margin-bottom: 24px;
+    }
+
+    /* Platform Pills */
+    .platforms {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 10px;
+      flex-wrap: wrap;
+      margin-top: 18px;
+    }
+    .platform-tag {
+      display: inline-flex;
+      align-items: center;
+      gap: 7px;
+      background: var(--bg-card);
+      border: 1px solid var(--border);
+      border-radius: 6px;
+      padding: 5px 11px;
+      font-size: 12px;
+      color: var(--text-muted);
+    }
+    .platform-tag svg {
+      width: 15px;
+      height: 15px;
+    }
+
+    /* Install terminal block */
+    .quick-install-container {
+      max-width: 680px;
+      margin: 30px auto 0;
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+    }
+    .install-switcher {
+      display: flex;
+      justify-content: center;
+      gap: 8px;
+      flex-wrap: wrap;
+    }
+    .install-tab {
+      background: rgba(255, 255, 255, 0.03);
+      border: 1px solid var(--border);
+      color: var(--text-muted);
+      padding: 5px 12px;
+      border-radius: 6px;
+      font-size: 12px;
+      font-weight: 500;
+      cursor: pointer;
+      transition: all 0.15s ease;
+      font-family: var(--font-sans);
+    }
+    .install-tab:hover {
+      color: var(--text);
+      border-color: #334155;
+      background: rgba(255, 255, 255, 0.06);
+    }
+    .install-tab.active {
+      color: var(--accent);
+      background: rgba(0, 230, 153, 0.1);
+      border-color: rgba(0, 230, 153, 0.3);
+      font-weight: 600;
+    }
+
+    .quick-install {
+      background: var(--code-bg);
+      border: 1px solid var(--border);
+      border-radius: 10px;
+      padding: 12px 18px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 12px;
+      box-shadow: 0 10px 30px rgba(0, 0, 0, 0.4);
+    }
+    .quick-install code {
+      font-family: var(--font-mono);
+      font-size: 13.5px;
+      color: #cbd5e1;
+      overflow-x: auto;
+      white-space: nowrap;
+      text-align: left;
+      scrollbar-width: none;
+      -ms-overflow-style: none;
+    }
+    .quick-install code::-webkit-scrollbar {
+      display: none;
+    }
+    .quick-install code span.prompt {
+      color: var(--accent);
+      user-select: none;
+      margin-right: 6px;
+    }
+    .copy-btn {
+      background: #141f30;
+      border: 1px solid var(--border);
+      color: var(--text-muted);
+      padding: 6px 10px;
+      border-radius: 6px;
+      cursor: pointer;
+      font-size: 12px;
+      display: flex;
+      align-items: center;
+      gap: 5px;
+      flex-shrink: 0;
+      transition: all 0.15s ease;
+    }
+    .copy-btn:hover {
+      background: #1c2b42;
+      color: var(--text);
+      border-color: var(--cyan);
+    }
+    .copy-btn.copied {
+      background: rgba(0, 230, 153, 0.15);
+      border-color: var(--accent);
+      color: var(--accent);
+    }
+
+    /* Showcase Section */
+    section.showcase {
+      padding: 48px 0;
+    }
+    .section-head {
+      text-align: center;
+      max-width: 660px;
+      margin: 0 auto 32px;
+    }
+    .section-head h2 {
+      font-size: 28px;
+      font-weight: 700;
+      letter-spacing: -0.4px;
+      color: var(--text);
+      margin-bottom: 8px;
+    }
+    .section-head p {
+      color: var(--text-muted);
+      font-size: 15px;
+    }
+
+    .gallery-container {
+      background: var(--bg-card);
+      border: 1px solid var(--border);
+      border-radius: 14px;
+      overflow: hidden;
+      box-shadow: 0 20px 50px rgba(0, 0, 0, 0.5);
+    }
+
+    .gallery-tabs {
+      display: flex;
+      gap: 4px;
+      padding: 10px;
+      background: #09101c;
+      border-bottom: 1px solid var(--border);
+      overflow-x: auto;
+      scrollbar-width: thin;
+    }
+    .gallery-tab {
+      background: transparent;
+      border: 1px solid transparent;
+      color: var(--text-muted);
+      font-family: var(--font-sans);
+      font-size: 13px;
+      font-weight: 500;
+      padding: 7px 14px;
+      border-radius: 8px;
+      cursor: pointer;
+      white-space: nowrap;
+      transition: all 0.15s ease;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
+    .gallery-tab:hover {
+      color: var(--text);
+      background: rgba(255, 255, 255, 0.04);
+    }
+    .gallery-tab.active {
+      color: var(--accent);
+      background: rgba(0, 230, 153, 0.09);
+      border-color: rgba(0, 230, 153, 0.25);
+    }
+
+    .gallery-stage {
+      position: relative;
+      background: #040810;
+      display: flex;
+      flex-direction: column;
+    }
+    .gallery-img {
+      width: 100%;
+      height: auto;
+      aspect-ratio: 16 / 9.8;
+      display: block;
+      transition: opacity 0.2s ease;
+    }
+    .gallery-caption {
+      padding: 14px 20px;
+      background: #09101c;
+      border-top: 1px solid var(--border);
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      gap: 16px;
+      font-size: 13.5px;
+      color: var(--text-muted);
+    }
+    .gallery-caption strong {
+      color: var(--text);
+    }
+
+    /* Quickstart Docs Section */
+    section.quickstart {
+      padding: 56px 0;
+      border-top: 1px solid var(--border);
+    }
+
+    .docs-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
+      gap: 20px;
+      margin-top: 24px;
+    }
+
+    .doc-card {
+      background: var(--bg-card);
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      padding: 22px;
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+      transition: border-color 0.15s ease;
+    }
+    .doc-card:hover {
+      border-color: #334155;
+    }
+    .doc-card-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+    }
+    .doc-card h3 {
+      font-size: 16px;
+      font-weight: 700;
+      color: var(--text);
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+    .doc-card p {
+      font-size: 13.5px;
+      color: var(--text-muted);
+      line-height: 1.5;
+    }
+    .code-block {
+      background: var(--code-bg);
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      padding: 10px 14px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 10px;
+      font-family: var(--font-mono);
+      font-size: 12.5px;
+      color: var(--cyan);
+    }
+    .code-block span.cmd {
+      overflow-x: auto;
+      white-space: nowrap;
+      scrollbar-width: none;
+      -ms-overflow-style: none;
+    }
+    .code-block span.cmd::-webkit-scrollbar {
+      display: none;
+    }
+
+    /* Safety & Architecture */
+    section.safety {
+      padding: 56px 0;
+      border-top: 1px solid var(--border);
+    }
+    .safety-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+      gap: 18px;
+      margin-top: 28px;
+    }
+    .safety-card {
+      background: var(--bg-card);
+      border: 1px solid var(--border);
+      border-radius: 10px;
+      padding: 20px;
+    }
+    .safety-card h3 {
+      font-size: 14.5px;
+      font-weight: 600;
+      color: var(--text);
+      margin-bottom: 6px;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+    .safety-card p {
+      font-size: 13px;
+      color: var(--text-muted);
+      line-height: 1.55;
+    }
+
+    /* Comparison Table */
+    section.comparison {
+      padding: 56px 0;
+      border-top: 1px solid var(--border);
+    }
+    .table-wrap {
+      overflow-x: auto;
+      margin-top: 24px;
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      background: var(--bg-card);
+    }
+    table.compare-table {
+      width: 100%;
+      border-collapse: collapse;
+      text-align: left;
+      font-size: 13px;
+    }
+    table.compare-table th,
+    table.compare-table td {
+      padding: 12px 16px;
+      border-bottom: 1px solid var(--border);
+    }
+    table.compare-table th {
+      background: #0a111e;
+      color: var(--text);
+      font-weight: 600;
+      font-size: 13.5px;
+    }
+    table.compare-table tr.category-header td {
+      background: #080d16;
+      color: var(--cyan);
+      font-weight: 700;
+      font-size: 12px;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+      padding-top: 16px;
+    }
+    table.compare-table tr:hover td {
+      background: rgba(255, 255, 255, 0.02);
+    }
+    table.compare-table td.col-preen {
+      background: rgba(0, 230, 153, 0.04);
+      font-weight: 600;
+      color: var(--text);
+    }
+
+    /* FAQ Section */
+    section.faq {
+      padding: 56px 0;
+      border-top: 1px solid var(--border);
+    }
+    .faq-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
+      gap: 20px;
+      margin-top: 24px;
+    }
+    .faq-item {
+      background: var(--bg-card);
+      border: 1px solid var(--border);
+      border-radius: 10px;
+      padding: 20px;
+    }
+    .faq-item h3 {
+      font-size: 15px;
+      font-weight: 600;
+      color: var(--text);
+      margin-bottom: 8px;
+    }
+    .faq-item p {
+      font-size: 13.5px;
+      color: var(--text-muted);
+      line-height: 1.55;
+    }
+
+    /* Sponsor & Patreon Section */
+    section.sponsor {
+      padding: 56px 0;
+      border-top: 1px solid var(--border);
+    }
+    .sponsor-card {
+      background: linear-gradient(135deg, #101622 0%, #151119 100%);
+      border: 1px solid rgba(255, 66, 77, 0.3);
+      border-radius: 14px;
+      padding: 32px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 28px;
+      flex-wrap: wrap;
+    }
+    .sponsor-profile {
+      display: flex;
+      align-items: center;
+      gap: 18px;
+    }
+    .sponsor-avatar {
+      width: 64px;
+      height: 64px;
+      border-radius: 50%;
+      border: 2px solid var(--patreon);
+      object-fit: cover;
+      display: block;
+    }
+    .sponsor-text h3 {
+      font-size: 18px;
+      font-weight: 700;
+      color: var(--text);
+      margin-bottom: 4px;
+    }
+    .sponsor-text p {
+      color: var(--text-muted);
+      font-size: 14px;
+      max-width: 580px;
+      line-height: 1.5;
+    }
+
+    /* Footer */
+    footer.site-footer {
+      border-top: 1px solid var(--border);
+      padding: 36px 0;
+      margin-top: auto;
+      background: #05080e;
+      font-size: 13px;
+      color: var(--text-dim);
+    }
+    .footer-row {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      flex-wrap: wrap;
+      gap: 16px;
+    }
+    .footer-links {
+      display: flex;
+      gap: 18px;
+      align-items: center;
+    }
+    .footer-links a {
+      color: var(--text-muted);
+    }
+    .footer-links a:hover {
+      color: var(--text);
+    }
+
+    /* Toast notification */
+    #toast {
+      position: fixed;
+      bottom: 24px;
+      right: 24px;
+      background: var(--accent);
+      color: #04121a;
+      font-weight: 600;
+      font-size: 13px;
+      padding: 8px 16px;
+      border-radius: 6px;
+      box-shadow: 0 4px 15px rgba(0, 0, 0, 0.5);
+      opacity: 0;
+      transform: translateY(10px);
+      transition: all 0.2s ease;
+      pointer-events: none;
+      z-index: 100;
+    }
+    #toast.show {
+      opacity: 1;
+      transform: translateY(0);
+    }
+
+    /* Mobile adjustments */
+    @media (max-width: 768px) {
+      nav.site-nav { display: none; }
+      .hero h1 { font-size: 32px; }
+      .sponsor-card { padding: 20px; }
+    }
+  </style>
+</head>
+<body>
+
+  <!-- Skip link for keyboard and screen reader accessibility -->
+  <a href="#main-content" class="skip-link">Skip to main content</a>
+
+  <!-- Header -->
+  <header class="site-header" role="banner">
+    <div class="container nav-row">
+      <a href="#" class="brand" aria-label="Preen home">
+        <img src="assets/icon.svg" alt="Preen Feather Icon" width="28" height="28">
+        <span>Preen</span>
+        <span class="tag">v0.1.1</span>
+      </a>
+
+      <nav class="site-nav" aria-label="Main Navigation">
+        <a href="#overview">Overview</a>
+        <a href="#quickstart">Quick Start</a>
+        <a href="#safety">Safety</a>
+        <a href="#comparison">Compare</a>
+        <a href="#faq">FAQ</a>
+        <a href="#sponsor">Sponsor</a>
+      </nav>
+
+      <div class="header-actions">
+        <!-- GitHub Star button -->
+        <a href="https://github.com/youxufkhan/preen" target="_blank" rel="noopener noreferrer" class="btn btn-secondary" aria-label="Star Preen on GitHub" title="Star Preen on GitHub">
+          <svg viewBox="0 0 16 16" fill="currentColor" aria-hidden="true">
+            <path d="M8 0C3.58 0 0 3.58 0 8c0 3.54 2.29 6.53 5.47 7.59.4.07.55-.17.55-.38 0-.19-.01-.82-.01-1.49-2.01.37-2.53-.49-2.69-.94-.09-.23-.48-.94-.82-1.13-.28-.15-.68-.52-.01-.53.63-.01 1.08.58 1.23.82.72 1.21 1.87.87 2.33.66.07-.52.28-.87.51-1.07-1.78-.2-3.64-.89-3.64-3.95 0-.87.31-1.59.82-2.15-.08-.2-.36-1.02.08-2.12 0 0 .67-.21 2.2.82.64-.18 1.32-.27 2-.27.68 0 1.36.09 2 .27 1.53-1.04 2.2-.82 2.2-.82.44 1.1.16 1.92.08 2.12.51.56.82 1.27.82 2.15 0 3.07-1.87 3.75-3.65 3.95.29.25.54.73.54 1.48 0 1.07-.01 1.93-.01 2.2 0 .21.15.46.55.38A8.01 8.01 0 0 0 16 8c0-4.42-3.58-8-8-8Z"/>
+          </svg>
+          <span>Star</span>
+        </a>
+
+        <!-- Patreon Button -->
+        <a href="https://www.patreon.com/c/youxufkhan" target="_blank" rel="noopener noreferrer" class="btn btn-patreon" aria-label="Support Yousuf Khan on Patreon" title="Support on Patreon">
+          <svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">
+            <path d="M14.82 2.41c-3.97 0-7.2 3.23-7.2 7.2 0 3.95 3.23 7.16 7.2 7.16 3.95 0 7.18-3.21 7.18-7.16 0-3.97-3.23-7.2-7.18-7.2zm-12.82.02h3.64v19.16h-3.64v-19.16z"/>
+          </svg>
+          <span>Patreon</span>
+        </a>
+
+        <!-- Latest Release Download -->
+        <a href="https://github.com/youxufkhan/preen/releases/latest" target="_blank" rel="noopener noreferrer" class="btn btn-primary" aria-label="Download latest release on GitHub">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+            <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/>
+          </svg>
+          <span>Download</span>
+        </a>
+      </div>
+    </div>
+  </header>
+
+  <main id="main-content">
+    <!-- Hero -->
+    <section class="hero" aria-labelledby="hero-title">
+      <div class="container">
+        <div class="hero-badge">
+          <span>Free and open source (GPL-3.0)</span>
+        </div>
+
+        <h1 id="hero-title">Linux system care without background daemons</h1>
+
+        <p class="lead">
+          Clean caches, uninstall packages with leftover files, inspect folder sizes, and monitor telemetry. Runs when you invoke it, and stops when you close it.
+        </p>
+
+        <div class="hero-ctas">
+          <!-- Direct latest .deb link -->
+          <a href="https://github.com/youxufkhan/preen/releases/download/v0.1.1/preen_0.1.1_amd64.deb" class="btn btn-primary" style="padding: 10px 22px; font-size: 14.5px;">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" aria-hidden="true">
+              <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/>
+            </svg>
+            <span>Download preen_0.1.1_amd64.deb</span>
+          </a>
+
+          <!-- Releases button -->
+          <a href="https://github.com/youxufkhan/preen/releases/latest" target="_blank" rel="noopener noreferrer" class="btn btn-secondary" style="padding: 10px 18px; font-size: 14.5px;">
+            <span>All Releases & Standalone Binaries</span>
+          </a>
+        </div>
+
+        <!-- Supported Platforms -->
+        <div class="platforms" aria-label="Supported Linux distributions">
+          <div class="platform-tag" title="Ubuntu 24.04 LTS and 26.04">
+            <svg viewBox="0 0 24 24" fill="#E95420" aria-hidden="true">
+              <circle cx="12" cy="12" r="10" fill="#E95420"/>
+              <circle cx="12" cy="12" r="5" fill="#ffffff"/>
+              <circle cx="5" cy="12" r="1.8" fill="#E95420"/>
+              <circle cx="15.5" cy="6" r="1.8" fill="#E95420"/>
+              <circle cx="15.5" cy="18" r="1.8" fill="#E95420"/>
+            </svg>
+            <span>Ubuntu 24.04 / 26.04</span>
+          </div>
+
+          <div class="platform-tag" title="Kubuntu and KDE Plasma 6">
+            <svg viewBox="0 0 24 24" fill="#1D99F3" aria-hidden="true">
+              <path d="M12 2a10 10 0 1 0 10 10A10 10 0 0 0 12 2zm1 14.5v-2.1l2.5 2.5 1.4-1.4-2.5-2.5H16.5v-2H14.4l2.5-2.5-1.4-1.4L13 9.6V7.5h-2v2.1L8.5 7.1 7.1 8.5l2.5 2.5H7.5v2h2.1l-2.5 2.5 1.4 1.4 2.5-2.5v2.1z"/>
+            </svg>
+            <span>Kubuntu (Plasma 6)</span>
+          </div>
+
+          <div class="platform-tag" title="Debian GNU/Linux">
+            <svg viewBox="0 0 24 24" fill="#D70A53" aria-hidden="true">
+              <path d="M12 2a10 10 0 1 0 10 10A10 10 0 0 0 12 2zm.2 3.8c2.4 0 4.4 1.7 4.7 4 .3 2.5-1.2 4.7-3.6 5.2-1.9.4-3.8-.7-4.4-2.4-.6-1.8.2-3.8 2-4.6.4-.2.8-.2 1.3-.2z"/>
+            </svg>
+            <span>Debian 12+</span>
+          </div>
+
+          <div class="platform-tag" title="Arch Linux & Fedora (Standalone CLI)">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true">
+              <polyline points="4 17 10 11 4 5"/><line x1="12" y1="19" x2="20" y2="19"/>
+            </svg>
+            <span>Arch & Fedora (CLI)</span>
+          </div>
+        </div>
+
+        <!-- Quick copyable terminal install -->
+        <div class="quick-install-container">
+          <div class="install-switcher" role="tablist" aria-label="Installation methods">
+            <button class="install-tab active" role="tab" aria-selected="true" data-cmd="curl -fsSL https://youxufkhan.github.io/preen/install.sh | sh">Auto (All Distros)</button>
+            <button class="install-tab" role="tab" aria-selected="false" data-cmd="curl -fsSL https://youxufkhan.github.io/preen/install.sh | sh">Arch & Fedora (CLI)</button>
+            <button class="install-tab" role="tab" aria-selected="false" data-cmd="wget https://github.com/youxufkhan/preen/releases/download/v0.1.1/preen_0.1.1_amd64.deb &amp;&amp; sudo apt install ./preen_0.1.1_amd64.deb">Ubuntu / Debian (.deb)</button>
+          </div>
+
+          <div class="quick-install">
+            <code>
+              <span class="prompt">$</span><span id="activeInstallCmd">curl -fsSL https://youxufkhan.github.io/preen/install.sh | sh</span>
+            </code>
+            <button class="copy-btn" id="activeCopyBtn" aria-label="Copy installation command" onclick="copySnippet(this, document.getElementById('activeInstallCmd').textContent)">
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg>
+              <span>Copy</span>
+            </button>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- Interactive Interface Tour -->
+    <section class="showcase" id="overview" aria-labelledby="overview-title">
+      <div class="container">
+        <div class="section-head">
+          <h2 id="overview-title">Interface and features</h2>
+          <p>Switch through the tabs below to inspect the desktop application and command-line engine.</p>
+        </div>
+
+        <div class="gallery-container">
+          <div class="gallery-tabs" id="galleryTabs" role="tablist" aria-label="Feature screenshots">
+            <button class="gallery-tab active" role="tab" aria-selected="true" data-img="assets/screenshots/01-overview.png" data-title="Overview & Telemetry" data-desc="Monitors CPU load, memory distribution, disk throughput, network traffic, battery health, and thermal sensors.">Overview</button>
+            <button class="gallery-tab" role="tab" aria-selected="false" data-img="assets/screenshots/02-clean.png" data-title="System Clean" data-desc="Finds reclaimable application caches, package caches, old kernels, crash dumps, and build caches.">Clean</button>
+            <button class="gallery-tab" role="tab" aria-selected="false" data-img="assets/screenshots/03-uninstall.png" data-title="Application Uninstaller" data-desc="Removes apt, snap, Flatpak, and AppImage applications along with residual files. User configs remain untouched unless selected.">Uninstall</button>
+            <button class="gallery-tab" role="tab" aria-selected="false" data-img="assets/screenshots/04-disk.png" data-title="Disk Space Explorer" data-desc="Inspects directory sizes folder by folder. Deleting from here sends items directly to your desktop Trash.">Disk</button>
+            <button class="gallery-tab" role="tab" aria-selected="false" data-img="assets/screenshots/05-projects.png" data-title="Project Build Purge" data-desc="Cleans rebuildable build directories such as node_modules, .venv, target, and .next from your coding projects.">Projects</button>
+            <button class="gallery-tab" role="tab" aria-selected="false" data-img="assets/screenshots/06-installers.png" data-title="Downloaded Installers" data-desc="Locates leftover .deb, .rpm, .run, .AppImage, and .iso files sitting in Downloads and Desktop.">Installers</button>
+            <button class="gallery-tab" role="tab" aria-selected="false" data-img="assets/screenshots/07-maintenance.png" data-title="System Maintenance" data-desc="Rebuilds application menu and font caches, flushes DNS, trims SSDs, and checks failed systemd services.">Maintenance</button>
+            <button class="gallery-tab" role="tab" aria-selected="false" data-img="assets/screenshots/00-cli.png" data-title="Command Line Interface" data-desc="Run any operation from your terminal. Supports human-readable output and machine-readable --json streams.">Terminal CLI</button>
+          </div>
+
+          <div class="gallery-stage">
+            <img id="galleryImage" class="gallery-img" src="assets/screenshots/01-overview.png" alt="Preen Linux System Overview and Telemetry Dashboard" width="920" height="563">
+            <div class="gallery-caption">
+              <div>
+                <strong id="captionTitle">Overview & Telemetry</strong>:
+                <span id="captionDesc">Monitors CPU load, memory distribution, disk throughput, network traffic, battery health, and thermal sensors.</span>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- Quick Start & CLI Docs -->
+    <section class="quickstart" id="quickstart" aria-labelledby="quickstart-title">
+      <div class="container">
+        <div class="section-head">
+          <h2 id="quickstart-title">Quick start guide</h2>
+          <p>Every command presents items for your review before deleting anything. Use dry-run mode to preview.</p>
+        </div>
+
+        <div class="docs-grid">
+
+          <!-- 0. Installation -->
+          <div class="doc-card">
+            <div class="doc-card-header">
+              <h3>Installation</h3>
+              <span class="platform-tag">Universal script</span>
+            </div>
+            <p>Install Preen across Linux distributions. It automatically installs the desktop package on Ubuntu/Debian or places the standalone CLI binary in /usr/local/bin on Arch Linux and Fedora.</p>
+            <div class="code-block">
+              <span class="cmd">curl -fsSL https://youxufkhan.github.io/preen/install.sh | sh</span>
+              <button class="copy-btn" aria-label="Copy install script command" onclick="copySnippet(this, 'curl -fsSL https://youxufkhan.github.io/preen/install.sh | sh')">Copy</button>
+            </div>
+            <p style="font-size: 12.5px; color: var(--text-dim);">To force the CLI engine without GUI on any distribution: <code>curl -fsSL https://youxufkhan.github.io/preen/install.sh | sh -s -- --cli</code>.</p>
+          </div>
+
+          <!-- 1. Clean -->
+          <div class="doc-card">
+            <div class="doc-card-header">
+              <h3>System Clean</h3>
+              <span class="platform-tag">Safe preview</span>
+            </div>
+            <p>Scan caches, package leftovers, and system logs. The dry-run flag calculates reclaimable space without modifying files.</p>
+            <div class="code-block">
+              <span class="cmd">preen clean --dry-run</span>
+              <button class="copy-btn" aria-label="Copy preen clean command" onclick="copySnippet(this, 'preen clean --dry-run')">Copy</button>
+            </div>
+            <p style="font-size: 12.5px; color: var(--text-dim);">When you are ready to remove items, run <code>preen clean</code>. Preen asks for your confirmation before deleting.</p>
+          </div>
+
+          <!-- 2. Uninstall -->
+          <div class="doc-card">
+            <div class="doc-card-header">
+              <h3>Application Uninstaller</h3>
+              <span class="platform-tag">Trash protection</span>
+            </div>
+            <p>List installed applications across apt, snap, Flatpak, and AppImage formats with their identifiers and residual folders.</p>
+            <div class="code-block">
+              <span class="cmd">preen uninstall --list</span>
+              <button class="copy-btn" aria-label="Copy preen uninstall command" onclick="copySnippet(this, 'preen uninstall --list')">Copy</button>
+            </div>
+            <p style="font-size: 12.5px; color: var(--text-dim);">To preview uninstallation of an application: <code>preen uninstall apt:btop --dry-run</code>.</p>
+          </div>
+
+          <!-- 3. Projects -->
+          <div class="doc-card">
+            <div class="doc-card-header">
+              <h3>Project Build Directories</h3>
+              <span class="platform-tag">Developer</span>
+            </div>
+            <p>Reclaim space from build directories in your coding folders, including node_modules, .venv, target, and cache folders.</p>
+            <div class="code-block">
+              <span class="cmd">preen purge --dry-run</span>
+              <button class="copy-btn" aria-label="Copy preen purge command" onclick="copySnippet(this, 'preen purge --dry-run')">Copy</button>
+            </div>
+            <p style="font-size: 12.5px; color: var(--text-dim);">Configure additional paths in <code>~/.config/preen/purge_paths</code>.</p>
+          </div>
+
+          <!-- 4. Telemetry -->
+          <div class="doc-card">
+            <div class="doc-card-header">
+              <h3>Live Telemetry Watch</h3>
+              <span class="platform-tag">Real-time</span>
+            </div>
+            <p>Displays a live terminal dashboard of CPU usage, memory, disk throughput, network metrics, and thermal readings.</p>
+            <div class="code-block">
+              <span class="cmd">preen status --watch</span>
+              <button class="copy-btn" aria-label="Copy preen status command" onclick="copySnippet(this, 'preen status --watch')">Copy</button>
+            </div>
+            <p style="font-size: 12.5px; color: var(--text-dim);">For automated monitoring scripts, pass <code>--json</code> to stream JSON objects.</p>
+          </div>
+
+          <!-- 5. Disk Analyzer -->
+          <div class="doc-card">
+            <div class="doc-card-header">
+              <h3>Disk Analyzer</h3>
+              <span class="platform-tag">Storage</span>
+            </div>
+            <p>Analyze folder sizes starting from any path. Hard-linked caches like uv and pnpm are counted accurately without inflation.</p>
+            <div class="code-block">
+              <span class="cmd">preen analyze ~</span>
+              <button class="copy-btn" aria-label="Copy preen analyze command" onclick="copySnippet(this, 'preen analyze ~')">Copy</button>
+            </div>
+            <p style="font-size: 12.5px; color: var(--text-dim);">Deletions made inside Disk Analyzer go directly to your desktop Trash.</p>
+          </div>
+
+          <!-- 6. History and Whitelist -->
+          <div class="doc-card">
+            <div class="doc-card-header">
+              <h3>Operations History</h3>
+              <span class="platform-tag">Audit trail</span>
+            </div>
+            <p>Review every operation executed by Preen. All deletions are recorded in an operation log for your verification.</p>
+            <div class="code-block">
+              <span class="cmd">preen history</span>
+              <button class="copy-btn" aria-label="Copy preen history command" onclick="copySnippet(this, 'preen history')">Copy</button>
+            </div>
+            <p style="font-size: 12.5px; color: var(--text-dim);">Add paths or item IDs to <code>~/.config/preen/whitelist</code> to exclude them permanently.</p>
+          </div>
+
+        </div>
+      </div>
+    </section>
+
+    <!-- Safety Guardrails -->
+    <section class="safety" id="safety" aria-labelledby="safety-title">
+      <div class="container">
+        <div class="section-head">
+          <h2 id="safety-title">Safety architecture</h2>
+          <p>Preen includes safeguards against accidental system breakage or data loss.</p>
+        </div>
+
+        <div class="safety-grid">
+          <div class="safety-card">
+            <h3>
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#00e699" stroke-width="2" aria-hidden="true"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>
+              Single Delete Validator
+            </h3>
+            <p>Every file deletion passes through <code>internal/safe</code>. It blocks top-level directories, home folders, ~/.ssh, ~/.gnupg, keyrings, passwords, and symlinks leading into them. Fuzz tests guard this boundary.</p>
+          </div>
+
+          <div class="safety-card">
+            <h3>
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#00e699" stroke-width="2" aria-hidden="true"><circle cx="12" cy="12" r="10"/><line x1="4.93" y1="4.93" x2="19.07" y2="19.07"/></svg>
+              Zero Background Daemons
+            </h3>
+            <p>Preen does not install system services, cron jobs, or background watchers. When you close the window or exit the CLI command, zero processes remain running on your machine.</p>
+          </div>
+
+          <div class="safety-card">
+            <h3>
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#00e699" stroke-width="2" aria-hidden="true"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>
+              Restricted Root Helper
+            </h3>
+            <p>Preen never runs as root. System tasks invoke <code>pkexec preen helper &lt;action&gt;</code>, which only executes an explicit list of named actions. Removing a package that would pull down a desktop environment is refused.</p>
+          </div>
+
+          <div class="safety-card">
+            <h3>
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#00e699" stroke-width="2" aria-hidden="true"><polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/></svg>
+              Trash Retention
+            </h3>
+            <p>Uninstalled application leftovers and Disk Explorer removals are moved to the Trash rather than erased. If you change your mind, items can be restored from your desktop Trash.</p>
+          </div>
+
+          <div class="safety-card">
+            <h3>
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#00e699" stroke-width="2" aria-hidden="true"><circle cx="12" cy="12" r="10"/><polygon points="10 8 16 12 10 16 10 8"/></svg>
+              Running App Detection
+            </h3>
+            <p>Running applications are skipped automatically. Preen checks process tables and lock files for Chrome, Firefox, Electron apps, and Gradle to avoid cleaning open caches.</p>
+          </div>
+
+          <div class="safety-card">
+            <h3>
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#00e699" stroke-width="2" aria-hidden="true"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/></svg>
+              Audit Logging & Whitelist
+            </h3>
+            <p>Every action is logged to <code>~/.local/state/preen/operations.log</code>. You can exclude any path or item identifier by listing it in <code>~/.config/preen/whitelist</code>.</p>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- Comparison Matrix -->
+    <section class="comparison" id="comparison" aria-labelledby="comparison-title">
+      <div class="container">
+        <div class="section-head">
+          <h2 id="comparison-title">Comparison with other tools</h2>
+          <p>A breakdown of capabilities across Linux and cross-platform tools.</p>
+        </div>
+
+        <div class="table-wrap">
+          <table class="compare-table">
+            <thead>
+              <tr>
+                <th scope="col">Feature</th>
+                <th scope="col" style="color: var(--accent);">Preen</th>
+                <th scope="col">BleachBit</th>
+                <th scope="col">btop</th>
+                <th scope="col">CCleaner</th>
+                <th scope="col">Mole</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr class="category-header">
+                <td colspan="6">Platform and interface</td>
+              </tr>
+              <tr>
+                <td>Runs on Linux</td>
+                <td class="col-preen">Yes</td>
+                <td>Yes</td>
+                <td>Yes</td>
+                <td>No (Windows/Mac)</td>
+                <td>No (macOS only)</td>
+              </tr>
+              <tr>
+                <td>Desktop app</td>
+                <td class="col-preen">Yes (Qt 6 Kirigami)</td>
+                <td>Yes (GTK)</td>
+                <td>No (Terminal)</td>
+                <td>Yes</td>
+                <td>Separate paid app</td>
+              </tr>
+              <tr>
+                <td>Command line with JSON</td>
+                <td class="col-preen">Yes</td>
+                <td>Partial (no JSON)</td>
+                <td>No</td>
+                <td>Few switches</td>
+                <td>Yes</td>
+              </tr>
+              <tr>
+                <td>License</td>
+                <td class="col-preen">GPL-3.0</td>
+                <td>GPL-3.0</td>
+                <td>Apache-2.0</td>
+                <td>Proprietary</td>
+                <td>GPL-3.0 (CLI)</td>
+              </tr>
+
+              <tr class="category-header">
+                <td colspan="6">Cleaning capabilities</td>
+              </tr>
+              <tr>
+                <td>App caches, logs, temp files</td>
+                <td class="col-preen">Yes</td>
+                <td>Yes</td>
+                <td>No</td>
+                <td>Yes</td>
+                <td>Yes</td>
+              </tr>
+              <tr>
+                <td>Developer caches (npm, uv, Cargo, Go)</td>
+                <td class="col-preen">Yes</td>
+                <td>No</td>
+                <td>No</td>
+                <td>No</td>
+                <td>Yes</td>
+              </tr>
+              <tr>
+                <td>Package manager leftovers</td>
+                <td class="col-preen">Yes (apt, snap, kernels)</td>
+                <td>Partial (no kernels)</td>
+                <td>No</td>
+                <td>N/A</td>
+                <td>Yes (Homebrew)</td>
+              </tr>
+              <tr>
+                <td>Project build folders (node_modules, .venv)</td>
+                <td class="col-preen">Yes</td>
+                <td>No</td>
+                <td>No</td>
+                <td>No</td>
+                <td>Yes</td>
+              </tr>
+              <tr>
+                <td>Downloaded installer files</td>
+                <td class="col-preen">Yes</td>
+                <td>No</td>
+                <td>No</td>
+                <td>No</td>
+                <td>Yes</td>
+              </tr>
+              <tr>
+                <td>Preview before deleting</td>
+                <td class="col-preen">Yes</td>
+                <td>Yes</td>
+                <td>N/A</td>
+                <td>Yes</td>
+                <td>Yes</td>
+              </tr>
+
+              <tr class="category-header">
+                <td colspan="6">Applications and disk</td>
+              </tr>
+              <tr>
+                <td>Uninstall apps with leftovers</td>
+                <td class="col-preen">Yes (apt, snap, Flatpak, AppImage)</td>
+                <td>No</td>
+                <td>No</td>
+                <td>Partial</td>
+                <td>Yes</td>
+              </tr>
+              <tr>
+                <td>Disk space explorer</td>
+                <td class="col-preen">Yes</td>
+                <td>No</td>
+                <td>No</td>
+                <td>Yes</td>
+                <td>Yes</td>
+              </tr>
+              <tr>
+                <td>Live telemetry dashboard</td>
+                <td class="col-preen">Yes</td>
+                <td>No</td>
+                <td>Yes</td>
+                <td>No</td>
+                <td>Yes</td>
+              </tr>
+              <tr>
+                <td>System maintenance (DNS, font/menu cache)</td>
+                <td class="col-preen">Yes</td>
+                <td>No</td>
+                <td>No</td>
+                <td>Registry only</td>
+                <td>Yes</td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+        <p style="font-size: 12px; color: var(--text-dim); margin-top: 10px; text-align: center;">
+          Preen does not perform browser password/cookie cleaning, secure shredding, startup management, or GPU telemetry. For file wiping, use BleachBit; for process signaling, use btop.
+        </p>
+      </div>
+    </section>
+
+    <!-- FAQ Section -->
+    <section class="faq" id="faq" aria-labelledby="faq-title">
+      <div class="container">
+        <div class="section-head">
+          <h2 id="faq-title">Frequently asked questions</h2>
+          <p>Common questions about Preen's design, platform support, and safety model.</p>
+        </div>
+
+        <div class="faq-grid">
+          <div class="faq-item">
+            <h3>Does Preen run background daemons or services?</h3>
+            <p>No. Preen installs no system services, cron jobs, or background watchers. When you exit the application or CLI command, zero processes remain in memory.</p>
+          </div>
+
+          <div class="faq-item">
+            <h3>Which Linux distributions does Preen support?</h3>
+            <p>Preen provides desktop packages for Ubuntu 24.04 and 26.04, Kubuntu with KDE Plasma 6 (Kirigami Qt 6.10), and Debian 12+. Standalone CLI binaries run on any modern Linux distribution including Arch Linux and Fedora.</p>
+          </div>
+
+          <div class="faq-item">
+            <h3>How does Preen protect against accidental deletion?</h3>
+            <p>All deletions pass through <code>internal/safe</code>, which strictly blocks root paths, home folders, SSH keys, GPG keys, and browser credentials. App uninstaller and disk explorer deletions move items to the desktop Trash.</p>
+          </div>
+
+          <div class="faq-item">
+            <h3>Does Preen delete user configuration files?</h3>
+            <p>No. By default, package uninstallation preserves user configuration directories in <code>~/.config</code>. Configuration files remain unless you explicitly select them for removal.</p>
+          </div>
+
+          <div class="faq-item">
+            <h3>Can I exclude specific paths or items from cleaning?</h3>
+            <p>Yes. Add any path or item identifier (such as <code>apt-cache</code>) to <code>~/.config/preen/whitelist</code>. Preen halts if this file cannot be read, ensuring your exclusions are always respected.</p>
+          </div>
+
+          <div class="faq-item">
+            <h3>Can I automate Preen in CI or maintenance scripts?</h3>
+            <p>Yes. Every command supports <code>--dry-run</code>, <code>--yes</code>, and <code>--json</code>. The JSON stream delivers structured events suitable for automated parsing.</p>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- Sponsor Section -->
+    <section class="sponsor" id="sponsor" aria-labelledby="sponsor-title">
+      <div class="container">
+        <div class="sponsor-card">
+          <div class="sponsor-profile">
+            <img src="assets/patreon-profile.jpeg" alt="Yousuf Khan" class="sponsor-avatar" width="64" height="64" onerror="this.style.display='none'">
+            <div class="sponsor-text">
+              <h3 id="sponsor-title">Support Preen on Patreon</h3>
+              <p>
+                I build open-source tools and share what I learn along the way. If Preen saves you time or space on Linux, consider supporting development on Patreon.
+              </p>
+            </div>
+          </div>
+
+          <a href="https://www.patreon.com/c/youxufkhan" target="_blank" rel="noopener noreferrer" class="btn btn-patreon" style="padding: 12px 22px; font-size: 15px;" aria-label="Support Yousuf Khan on Patreon">
+            <svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">
+              <path d="M14.82 2.41c-3.97 0-7.2 3.23-7.2 7.2 0 3.95 3.23 7.16 7.2 7.16 3.95 0 7.18-3.21 7.18-7.16 0-3.97-3.23-7.2-7.18-7.2zm-12.82.02h3.64v19.16h-3.64v-19.16z"/>
+            </svg>
+            <span>Support on Patreon</span>
+          </a>
+        </div>
+      </div>
+    </section>
+  </main>
+
+  <!-- Footer -->
+  <footer class="site-footer" role="contentinfo">
+    <div class="container footer-row">
+      <div>
+        <span>Preen is an independent open-source project licensed under GPL-3.0.</span>
+      </div>
+
+      <div class="footer-links">
+        <a href="https://github.com/youxufkhan/preen" target="_blank" rel="noopener noreferrer">GitHub</a>
+        <a href="https://github.com/youxufkhan/preen/releases" target="_blank" rel="noopener noreferrer">Releases</a>
+        <a href="https://www.patreon.com/c/youxufkhan" target="_blank" rel="noopener noreferrer">Patreon</a>
+        <a href="https://github.com/youxufkhan" target="_blank" rel="noopener noreferrer">Author</a>
+      </div>
+    </div>
+  </footer>
+
+  <!-- Toast -->
+  <div id="toast" role="status" aria-live="polite">Copied to clipboard</div>
+
+  <script>
+    // Install switcher tabs
+    const installTabs = document.querySelectorAll('.install-tab');
+    const activeInstallCmd = document.getElementById('activeInstallCmd');
+
+    installTabs.forEach(tab => {
+      tab.addEventListener('click', () => {
+        installTabs.forEach(t => {
+          t.classList.remove('active');
+          t.setAttribute('aria-selected', 'false');
+        });
+        tab.classList.add('active');
+        tab.setAttribute('aria-selected', 'true');
+        activeInstallCmd.textContent = tab.getAttribute('data-cmd');
+      });
+    });
+
+    // Tabbed screenshot gallery
+    const tabs = document.querySelectorAll('.gallery-tab');
+    const galleryImg = document.getElementById('galleryImage');
+    const captionTitle = document.getElementById('captionTitle');
+    const captionDesc = document.getElementById('captionDesc');
+
+    tabs.forEach(tab => {
+      tab.addEventListener('click', () => {
+        tabs.forEach(t => {
+          t.classList.remove('active');
+          t.setAttribute('aria-selected', 'false');
+        });
+        tab.classList.add('active');
+        tab.setAttribute('aria-selected', 'true');
+
+        const imgPath = tab.getAttribute('data-img');
+        const title = tab.getAttribute('data-title');
+        const desc = tab.getAttribute('data-desc');
+
+        galleryImg.style.opacity = '0.4';
+        setTimeout(() => {
+          galleryImg.src = imgPath;
+          galleryImg.alt = title;
+          captionTitle.textContent = title;
+          captionDesc.textContent = desc;
+          galleryImg.style.opacity = '1';
+        }, 120);
+      });
+    });
+
+    // Copy snippet helper
+    function copySnippet(button, text) {
+      navigator.clipboard.writeText(text).then(() => {
+        const originalText = button.innerHTML;
+        button.classList.add('copied');
+        button.innerHTML = '<span>Copied!</span>';
+
+        const toast = document.getElementById('toast');
+        toast.classList.add('show');
+
+        setTimeout(() => {
+          button.classList.remove('copied');
+          button.innerHTML = originalText;
+          toast.classList.remove('show');
+        }, 2000);
+      }).catch(err => {
+        console.error('Clipboard copy failed:', err);
+      });
+    }
+  </script>
+</body>
+</html>

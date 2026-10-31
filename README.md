@@ -4,6 +4,20 @@
 
 <br/>
 
+<div align="center">
+  <a href="https://www.patreon.com/c/youxufkhan" target="_blank" rel="noopener noreferrer">
+    <img src="https://img.shields.io/badge/Support_on_Patreon-FF424D?style=for-the-badge&logo=patreon&logoColor=white" alt="Support on Patreon" />
+  </a>
+  <a href="https://youxufkhan.github.io/preen/" target="_blank" rel="noopener noreferrer">
+    <img src="https://img.shields.io/badge/Documentation-00e699?style=for-the-badge&logo=googlechrome&logoColor=04121a" alt="Documentation & Guide" />
+  </a>
+  <a href="https://github.com/youxufkhan/preen/releases/latest" target="_blank" rel="noopener noreferrer">
+    <img src="https://img.shields.io/github/v/release/youxufkhan/preen?style=for-the-badge&color=38bdf8&label=Latest%20Release" alt="Latest Release" />
+  </a>
+</div>
+
+<br/>
+
 Clean, uninstall, analyze, and monitor Linux from one application. Preen is built for Ubuntu and Kubuntu and inspired by [Mole](https://github.com/tw93/mole) for macOS.
 
 - **Clean**: removes caches, logs, old snap versions, crash dumps, old kernels, browser and Electron app caches, and developer caches (uv, pnpm, npm, Bun, pip, Gradle, Cargo, Go).
@@ -78,7 +92,13 @@ Preen does not yet do privacy cleaning, secure wiping, startup apps, duplicate f
 
 ## Install
 
-Ubuntu or Kubuntu 26.04 (Qt 6.10 and KDE Frameworks 6):
+One-line installer (Ubuntu, Debian, Kubuntu, Arch, Fedora):
+
+```bash
+curl -fsSL https://youxufkhan.github.io/preen/install.sh | sh
+```
+
+Or install the package manually on Ubuntu or Kubuntu:
 
 ```bash
 wget https://github.com/youxufkhan/preen/releases/download/v0.1.1/preen_0.1.1_amd64.deb
