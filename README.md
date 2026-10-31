@@ -12,6 +12,44 @@ Clean, uninstall, analyze and monitor Linux from one app. Preen is built for Ubu
 
 Every change is listed for review first. Nothing runs in the background.
 
+## How Preen compares
+
+✅ yes · ◐ partly · ❌ no · – not applicable
+
+| | Preen | BleachBit | btop | CCleaner | Mole |
+|---|:-:|:-:|:-:|:-:|:-:|
+| **Platform and interface** | | | | | |
+| Runs on Linux | ✅ | ✅ | ✅ | ❌ Windows, macOS, Android | ❌ macOS (Windows beta) |
+| Desktop app | ✅ KDE (Kirigami) | ✅ GTK | ❌ terminal | ✅ | ◐ separate paid Mac app |
+| Command line with JSON output | ✅ | ◐ no JSON | ❌ | ◐ a few switches | ✅ |
+| Free and open source | ✅ GPL-3 | ✅ GPL-3 | ✅ Apache-2.0 | ❌ freemium | ✅ GPL-3 (CLI) |
+| **Cleaning** | | | | | |
+| App caches, logs, temp files, Trash | ✅ | ✅ | ❌ | ✅ | ✅ |
+| Browser caches | ✅ | ✅ | ❌ | ✅ | ✅ |
+| Browser privacy data (cookies, history, passwords) | ❌ | ✅ | ❌ | ✅ | ❌ |
+| Developer caches (npm, pnpm, uv, pip, Gradle, Cargo, Go) | ✅ | ❌ | ❌ | ❌ | ✅ |
+| Package manager leftovers | ✅ apt, snaps, old kernels | ◐ apt, snaps; no kernels | ❌ | – | ✅ Homebrew |
+| Project build folders (`node_modules`, `target`, `.venv`) | ✅ | ❌ | ❌ | ❌ | ✅ |
+| Downloaded installer files | ✅ | ❌ | ❌ | ❌ | ✅ |
+| Preview before deleting | ✅ | ✅ | – | ✅ | ✅ |
+| Shred files, wipe free space | ❌ | ✅ | ❌ | ✅ | ❌ |
+| **Apps** | | | | | |
+| Uninstall apps with their leftovers | ✅ apt, snap, Flatpak, AppImage | ❌ | ❌ | ◐ runs the app's own uninstaller | ✅ |
+| Startup apps manager | ❌ | ❌ | ❌ | ✅ | ❌ |
+| Software updater | ❌ | ❌ | ❌ | ✅ paid | ❌ |
+| **Disk and system** | | | | | |
+| Disk usage explorer | ✅ | ❌ | ❌ | ✅ | ✅ |
+| Duplicate file finder | ❌ | ❌ | ❌ | ✅ | ❌ |
+| Live CPU, memory, disk and network | ✅ | ❌ | ✅ | ❌ | ✅ |
+| Process list and control | ◐ busiest processes, no kill | ❌ | ✅ tree view, signals | ❌ | ◐ busiest processes |
+| GPU stats | ❌ | ❌ | ✅ | ❌ | ✅ |
+| Temperatures and battery health | ✅ | ❌ | ✅ | ❌ | ✅ |
+| Maintenance (DNS, font and menu caches, SSD trim) | ✅ | ❌ | ❌ | ◐ Windows registry | ✅ |
+
+The CCleaner column is the Windows version. The Mole column is the free command-line tool. Checked November 2026.
+
+Preen does not yet do privacy cleaning, secure wiping, startup apps, duplicate files, process control or GPU stats. For now, use BleachBit for privacy cleaning and wiping, and btop for process control.
+
 ## Install
 
 Ubuntu or Kubuntu 26.04 (Qt 6.10 and KDE Frameworks 6):
