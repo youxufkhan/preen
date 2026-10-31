@@ -1,0 +1,12 @@
+[Desktop Entry]
+Type=Application
+Name=Preen
+GenericName=System Cleaner
+Comment=Clean caches, uninstall apps, see what uses disk space and watch system health
+Exec=preen-gui
+Icon=preen
+Terminal=false
+Categories=Qt;KDE;System;Utility;
+Keywords=clean;cleaner;junk;cache;disk;space;uninstall;monitor;health;
+StartupNotify=true
+StartupWMClass=preen-gui

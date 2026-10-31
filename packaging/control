@@ -1,0 +1,15 @@
+Package: preen
+Version: @VERSION@
+Architecture: amd64
+Maintainer: Preen contributors
+Installed-Size: @SIZE@
+Depends: libc6, libstdc++6, libqt6core6t64 (>= 6.10), libqt6gui6 (>= 6.10), libqt6widgets6, libqt6qml6, libqt6quick6 (>= 6.10), libqt6quickcontrols2-6, qml6-module-org-kde-kirigami, qml6-module-qtquick-controls, qml6-module-qtquick-layouts, qml6-module-qtquick-templates, pkexec, libglib2.0-bin
+Recommends: qml6-module-org-kde-desktop
+Section: admin
+Priority: optional
+Homepage: https://github.com/youxufkhan/preen
+Description: Clean, uninstall, analyze and monitor Linux
+ Preen removes caches, logs, old snap versions, old kernels and developer
+ caches; uninstalls apt, snap, Flatpak and AppImage apps with their
+ leftovers; shows what uses disk space; and reports live system health.
+ Every change is shown for review first. Inspired by Mole for macOS.

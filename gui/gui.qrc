@@ -1,0 +1,18 @@
+<!DOCTYPE RCC>
+<RCC version="1.0">
+  <qresource prefix="/">
+    <file>preen.svg</file>
+    <file>qml/Main.qml</file>
+    <file>qml/OverviewPage.qml</file>
+    <file>qml/ScanPage.qml</file>
+    <file>qml/UninstallPage.qml</file>
+    <file>qml/DiskPage.qml</file>
+    <file>qml/HistoryPage.qml</file>
+    <file>qml/Hero.qml</file>
+    <file>qml/Tile.qml</file>
+    <file>qml/SizeBar.qml</file>
+    <file>qml/Sparkline.qml</file>
+    <file>qml/RiskBadge.qml</file>
+    <file>qml/Format.js</file>
+  </qresource>
+</RCC>
