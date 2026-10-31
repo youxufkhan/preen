@@ -164,12 +164,13 @@ func TestPackageGuards(t *testing.T) {
 	if !have("dpkg-query") {
 		t.Skip("not a dpkg system")
 	}
-	for _, p := range []string{"bash", "coreutils", "", "../etc", "kubuntu-desktop"} {
+	for _, p := range []string{"bash", "coreutils", "", "../etc", "kubuntu-desktop",
+		"btop+", "btop-", "bt*", "~nbtop", "?name(btop)", "btop:amd64", "-btop", "Btop", "a b"} {
 		if checkRemovablePackage(p) == nil {
 			t.Errorf("package %q passed the removal guard", p)
 		}
 	}
-	for _, s := range []string{"core22", "snapd", "bare", "gnome-46-2404", "a/b"} {
+	for _, s := range []string{"core22", "snapd", "bare", "gnome-46-2404", "a/b", "fire*", "firefox-", "-firefox"} {
 		if checkRemovableSnap(s) == nil {
 			t.Errorf("snap %q passed the removal guard", s)
 		}

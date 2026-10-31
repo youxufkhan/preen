@@ -55,8 +55,8 @@ Preen does not yet do privacy cleaning, secure wiping, startup apps, duplicate f
 Ubuntu or Kubuntu 26.04 (Qt 6.10 and KDE Frameworks 6):
 
 ```bash
-wget https://github.com/youxufkhan/preen/releases/download/v0.1.0/preen_0.1.0_amd64.deb
-sudo apt install ./preen_0.1.0_amd64.deb
+wget https://github.com/youxufkhan/preen/releases/download/v0.1.1/preen_0.1.1_amd64.deb
+sudo apt install ./preen_0.1.1_amd64.deb
 ```
 
 On other distributions, use the command-line engine on its own (`preen-linux-amd64` on the [releases page](https://github.com/youxufkhan/preen/releases)) or build from source (see Build below).

@@ -6,7 +6,7 @@ import (
 	"os"
 )
 
-var version = "0.1.0"
+var version = "0.1.1"
 
 const usageText = `Preen: clean, uninstall, analyze and monitor Linux.
 

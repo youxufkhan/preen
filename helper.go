@@ -7,6 +7,8 @@ import (
 	"fmt"
 	"os"
 	"os/exec"
+	"regexp"
+	"slices"
 	"strings"
 
 	"preen/internal/safe"
@@ -100,7 +102,7 @@ var helperActions = map[string]func(arg string) error{
 		return run("snap", "remove", "--purge", name)
 	},
 	"flatpak-remove": func(id string) error {
-		if !strings.Contains(cmdOut("flatpak", "list", "--system", "--app", "--columns=application"), id) || strings.ContainsAny(id, " /") {
+		if !slices.Contains(strings.Split(cmdOut("flatpak", "list", "--system", "--app", "--columns=application"), "\n"), id) {
 			return fmt.Errorf("%q is not an installed system flatpak", id)
 		}
 		return run("flatpak", "uninstall", "--system", "-y", "--delete-data", id)
@@ -147,21 +149,35 @@ var protectedPkgs = []string{
 	"wireplumber", "xorg", "xwayland", "dbus*", "libc6", "grub*", "shim*", "base-files", "coreutils", "bash",
 }
 
+// Debian package names: lowercase letters, digits, '+', '-', '.'. It must end in a
+// letter or digit, because apt reads a trailing '+' as "install" and '-' as "remove",
+// and it must hold no glob or pattern characters, because apt and dpkg-query expand those.
+var debName = regexp.MustCompile(`^[a-z0-9][a-z0-9+.-]*[a-z0-9]$`)
+
 func checkRemovablePackage(pkg string) error {
-	if pkg == "" || strings.ContainsAny(pkg, " /") {
+	if !debName.MatchString(pkg) {
 		return fmt.Errorf("invalid package name %q", pkg)
 	}
-	info := cmdOut("dpkg-query", "-W", "-f=${db:Status-Abbrev}|${Priority}|${Essential}", pkg)
-	f := strings.Split(info, "|")
-	if len(f) != 3 || !strings.HasPrefix(f[0], "ii") {
+	if cmdOut("dpkg-query", "-W", "-f=${Package}\n", pkg) != pkg {
 		return fmt.Errorf("%s is not installed", pkg)
 	}
-	if f[2] == "yes" || f[1] == "required" || f[1] == "important" || matchesAny(pkg, protectedPkgs) {
-		return fmt.Errorf("%s is part of the system and is not removed", pkg)
+	removed := simulateRemoval(pkg)
+	if len(removed) == 0 {
+		return fmt.Errorf("%s is not installed", pkg)
 	}
-	for _, r := range simulateRemoval(pkg) {
-		if matchesAny(r, protectedPkgs) {
-			return fmt.Errorf("removing %s would also remove %s", pkg, r)
+	// Every package apt would take with it must pass the same checks as the named one.
+	info := cmdOutAny("dpkg-query", append([]string{"-W", "-f=${Package}|${db:Status-Abbrev}|${Priority}|${Essential}\n"}, removed...)...)
+	for _, l := range strings.Split(info, "\n") {
+		f := strings.Split(l, "|")
+		if len(f) != 4 {
+			continue
+		}
+		name := strings.SplitN(f[0], ":", 2)[0]
+		if f[3] == "yes" || f[2] == "required" || f[2] == "important" || matchesAny(name, protectedPkgs) {
+			if name == pkg {
+				return fmt.Errorf("%s is part of the system and is not removed", pkg)
+			}
+			return fmt.Errorf("removing %s would also remove %s", pkg, name)
 		}
 	}
 	return nil
@@ -178,10 +194,12 @@ func simulateRemoval(pkg string) []string {
 	return out
 }
 
+var snapName = regexp.MustCompile(`^[a-z0-9][a-z0-9-]*[a-z0-9]$`)
+
 var protectedSnaps = []string{"core*", "snapd", "bare", "gnome-*", "gtk-common-themes", "kf5-*", "kf6-*", "mesa-*", "firmware-updater", "snap-store"}
 
 func checkRemovableSnap(name string) error {
-	if name == "" || strings.ContainsAny(name, " /") || matchesAny(name, protectedSnaps) {
+	if !snapName.MatchString(name) || matchesAny(name, protectedSnaps) {
 		return fmt.Errorf("snap %q is not removable by Preen", name)
 	}
 	for _, l := range strings.Split(cmdOut("snap", "list"), "\n") {
