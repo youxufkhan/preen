@@ -397,6 +397,8 @@
       box-shadow: 0 10px 30px rgba(0, 0, 0, 0.4);
     }
     .quick-install code {
+      min-width: 0; /* let the flex item shrink so overflow-x scrolls instead of widening the page */
+      flex: 1;
       font-family: var(--font-mono);
       font-size: 13.5px;
       color: #cbd5e1;
@@ -539,7 +541,7 @@
 
     .docs-grid {
       display: grid;
-      grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
+      grid-template-columns: repeat(auto-fit, minmax(min(320px, 100%), 1fr));
       gap: 20px;
       margin-top: 24px;
     }
@@ -605,7 +607,7 @@
     }
     .safety-grid {
       display: grid;
-      grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+      grid-template-columns: repeat(auto-fit, minmax(min(280px, 100%), 1fr));
       gap: 18px;
       margin-top: 28px;
     }
@@ -684,7 +686,7 @@
     }
     .faq-grid {
       display: grid;
-      grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
+      grid-template-columns: repeat(auto-fit, minmax(min(320px, 100%), 1fr));
       gap: 20px;
       margin-top: 24px;
     }
@@ -799,11 +801,22 @@
       transform: translateY(0);
     }
 
+    /* Long commands and paths inside sentences wrap instead of widening the page */
+    p code { overflow-wrap: anywhere; }
+
     /* Mobile adjustments */
     @media (max-width: 768px) {
       nav.site-nav { display: none; }
       .hero h1 { font-size: 32px; }
       .sponsor-card { padding: 20px; }
+      /* Three labelled buttons don't fit next to the logo on a phone: show icons only
+         (each button keeps its aria-label and title). */
+      .header-actions { gap: 6px; }
+      .header-actions .btn { padding: 8px 10px; }
+      .header-actions .btn span { display: none; }
+    }
+    @media (max-width: 360px) {
+      .brand span.tag { display: none; }
     }
   </style>
 </head>
