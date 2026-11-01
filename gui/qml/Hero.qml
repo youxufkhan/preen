@@ -4,12 +4,15 @@ import QtQuick.Layouts
 import org.kde.kirigami as Kirigami
 
 // The one large figure per page, a caption under it, and the page's primary action on the right.
+// While busy it shows a progress bar (determinate when progress >= 0) and a detail line.
 QQC2.Control {
     id: hero
 
     property string value: ""
     property string caption: ""
+    property string detail: ""          // second, quieter line (e.g. the location being measured)
     property bool busy: false
+    property real progress: -1          // 0..1, or -1 for "working, length unknown"
     default property alias actions: actionRow.data
 
     padding: Kirigami.Units.gridUnit
@@ -26,15 +29,8 @@ QQC2.Control {
     contentItem: RowLayout {
         spacing: Kirigami.Units.gridUnit
 
-        QQC2.BusyIndicator {
-            visible: hero.busy
-            running: hero.busy
-            Layout.preferredWidth: Kirigami.Units.iconSizes.large
-            Layout.preferredHeight: Kirigami.Units.iconSizes.large
-        }
-
         ColumnLayout {
-            spacing: 0
+            spacing: Kirigami.Units.smallSpacing / 2
             Layout.fillWidth: true
 
             QQC2.Label {
@@ -46,11 +42,40 @@ QQC2.Control {
                 Layout.fillWidth: true
                 elide: Text.ElideRight
             }
+            RowLayout {
+                spacing: Kirigami.Units.smallSpacing
+                Layout.fillWidth: true
+                QQC2.BusyIndicator {
+                    visible: hero.busy && hero.value === ""
+                    running: visible
+                    Layout.preferredWidth: Kirigami.Units.iconSizes.smallMedium
+                    Layout.preferredHeight: Kirigami.Units.iconSizes.smallMedium
+                }
+                QQC2.Label {
+                    text: hero.caption
+                    visible: text !== ""
+                    color: hero.busy ? Kirigami.Theme.textColor : Kirigami.Theme.disabledTextColor
+                    font.features: { "tnum": 1 }
+                    wrapMode: Text.Wrap
+                    Layout.fillWidth: true
+                }
+            }
+            QQC2.ProgressBar {
+                visible: hero.busy
+                indeterminate: hero.progress < 0
+                value: Math.max(0, hero.progress)
+                Layout.fillWidth: true
+                Layout.maximumWidth: Kirigami.Units.gridUnit * 30
+                Behavior on value {
+                    NumberAnimation { duration: Kirigami.Units.shortDuration }
+                }
+            }
             QQC2.Label {
-                text: hero.caption
+                text: hero.detail
                 visible: text !== ""
                 color: Kirigami.Theme.disabledTextColor
-                wrapMode: Text.Wrap
+                font: Kirigami.Theme.smallFont
+                elide: Text.ElideMiddle
                 Layout.fillWidth: true
             }
         }

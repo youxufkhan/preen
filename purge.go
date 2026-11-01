@@ -1,9 +1,11 @@
 package main
 
 import (
+	"fmt"
 	"io/fs"
 	"os"
 	"path/filepath"
+	"slices"
 	"strings"
 	"time"
 )
@@ -38,7 +40,27 @@ const purgeDepth = 6
 
 func cmdPurge(args []string) error {
 	fs, o := planFlags("purge")
+	listPaths := fs.Bool("paths", false, "list the folders Preen scans for projects")
+	add := fs.String("add-path", "", "add a folder to scan for projects")
+	remove := fs.String("remove-path", "", "stop scanning a folder")
 	fs.Parse(args)
+	if *add != "" || *remove != "" {
+		if err := editProjectRoots(*add, *remove); err != nil {
+			return err
+		}
+		*listPaths = true
+	}
+	if *listPaths {
+		roots := projectRoots()
+		emit(Event{Type: "paths", Data: roots})
+		for _, r := range roots {
+			say("  %s", tildePath(r))
+		}
+		if len(roots) == 0 {
+			say("No project folders. Add one with: preen purge --add-path ~/code")
+		}
+		return nil
+	}
 	roots := projectRoots()
 	if fs.NArg() > 0 {
 		roots = fs.Args()
@@ -65,11 +87,45 @@ func projectRoots() []string {
 	return roots
 }
 
+// editProjectRoots adds or removes a folder in ~/.config/preen/purge_paths. The first
+// edit writes out the default folders too, so nothing the user saw disappears.
+func editProjectRoots(add, remove string) error {
+	roots := projectRoots()
+	if add != "" {
+		p, err := filepath.Abs(expand(add))
+		if err != nil {
+			return err
+		}
+		if st, err := os.Stat(p); err != nil || !st.IsDir() {
+			return fmt.Errorf("%s is not a folder", add)
+		}
+		if p == "/" {
+			return fmt.Errorf("scanning the whole disk for projects is too slow; choose a folder")
+		}
+		if !slices.Contains(roots, p) {
+			roots = append(roots, p)
+		}
+	}
+	if remove != "" {
+		p, _ := filepath.Abs(expand(remove))
+		roots = slices.DeleteFunc(roots, func(r string) bool { return r == p })
+	}
+	var b strings.Builder
+	b.WriteString("# Folders Preen scans for project build artifacts, one per line.\n")
+	for _, r := range roots {
+		b.WriteString(tildePath(r) + "\n")
+	}
+	if err := os.MkdirAll(configDir(), 0o755); err != nil {
+		return err
+	}
+	return os.WriteFile(filepath.Join(configDir(), "purge_paths"), []byte(b.String()), 0o644)
+}
+
 func purgeScan(roots []string) []*Item {
 	var found []string
-	for _, root := range roots {
+	for i, root := range roots {
 		root = filepath.Clean(expand(root))
-		progress("Scanning " + tildePath(root))
+		progressN("Searching "+tildePath(root)+" · "+plural(len(found), "build folder")+" found", i, len(roots)+1, 0, 0)
 		depth0 := strings.Count(root, "/")
 		filepath.WalkDir(root, func(p string, d fs.DirEntry, err error) error {
 			if err != nil || !d.IsDir() {
@@ -89,6 +145,7 @@ func purgeScan(roots []string) []*Item {
 			return nil
 		})
 	}
+	progressN("Measuring "+plural(len(found), "build folder"), len(roots), len(roots)+1, 0, 0)
 	es := entries(found)
 	week := time.Now().AddDate(0, 0, -7)
 	var items []*Item

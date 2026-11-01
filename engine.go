@@ -22,17 +22,19 @@ import (
 
 // Item is one reviewable thing a command can remove or change.
 type Item struct {
-	ID       string  `json:"id"`
-	Group    string  `json:"group"`
-	Label    string  `json:"label"`
-	Bytes    int64   `json:"bytes"`
-	Risk     string  `json:"risk"` // safe | review | personal
-	Selected bool    `json:"selected"`
-	Root     bool    `json:"root,omitempty"`
-	Note     string  `json:"note,omitempty"`     // extra context, or why it is disabled
-	Disabled bool    `json:"disabled,omitempty"` // cannot be applied right now (e.g. app running)
-	Entries  []Entry `json:"entries,omitempty"`
-	Icon     string  `json:"icon,omitempty"`
+	ID        string  `json:"id"`
+	Group     string  `json:"group"`
+	Label     string  `json:"label"`
+	Bytes     int64   `json:"bytes"`
+	Risk      string  `json:"risk"` // safe | review | personal
+	Selected  bool    `json:"selected"`
+	Root      bool    `json:"root,omitempty"`
+	Note      string  `json:"note,omitempty"`     // extra context, or why it is disabled
+	Disabled  bool    `json:"disabled,omitempty"` // cannot be applied right now (e.g. app running)
+	Entries   []Entry `json:"entries,omitempty"`
+	Icon      string  `json:"icon,omitempty"`
+	Installed int64   `json:"installed,omitempty"` // apps: install or last update time (unix seconds)
+	LastUsed  int64   `json:"last_used,omitempty"` // apps: last launch, estimated (unix seconds)
 
 	action   string       // helper action for root items
 	required bool         // if this item fails, apply nothing after it
@@ -55,7 +57,9 @@ type Event struct {
 	Bytes   int64  `json:"bytes,omitempty"`
 	Count   int    `json:"count,omitempty"`
 	Free    int64  `json:"free,omitempty"`
-	Data    any    `json:"data,omitempty"` // analyze and status payloads
+	Done    int    `json:"done,omitempty"`  // progress: steps finished
+	Total   int    `json:"total,omitempty"` // progress: steps in all
+	Data    any    `json:"data,omitempty"`  // analyze, status and paths payloads
 }
 
 var (
@@ -85,6 +89,32 @@ func progress(msg string) {
 	if !jsonOut && isTTY(os.Stderr) {
 		fmt.Fprintf(os.Stderr, "\r\033[K%s", msg)
 	}
+}
+
+// progressN reports a step count, bytes found so far and (optionally) files seen.
+func progressN(msg string, done, total int, bytes int64, files int64) {
+	emit(Event{Type: "progress", Message: msg, Done: done, Total: total, Bytes: bytes, Count: int(files)})
+	if !jsonOut && isTTY(os.Stderr) {
+		line := fmt.Sprintf("%d/%d", done, total)
+		if files > 0 {
+			line += " · " + thousands(files) + " files"
+		}
+		if bytes > 0 {
+			line += " · " + human(bytes)
+		}
+		if msg != "" {
+			line += " · " + msg
+		}
+		fmt.Fprintf(os.Stderr, "\r\033[K%s", line)
+	}
+}
+
+func thousands(n int64) string {
+	s := strconv.FormatInt(n, 10)
+	for i := len(s) - 3; i > 0; i -= 3 {
+		s = s[:i] + "," + s[i:]
+	}
+	return s
 }
 
 func clearProgress() {

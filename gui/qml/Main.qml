@@ -20,26 +20,25 @@ Kirigami.ApplicationWindow {
             title: "Clean", command: "clean", applyText: "Clean",
             scanningText: "Measuring caches, logs and old packages…",
             emptyText: "Nothing to clean",
-            heroCaption: "selected to clean" } },
+            heroCaption: "can be cleaned", stepText: "locations checked" } },
         uninstall: { url: "UninstallPage.qml", props: {} },
         disk: { url: "DiskPage.qml", props: {} },
         projects: { url: "ScanPage.qml", props: {
             title: "Projects", command: "purge", applyText: "Remove",
             scanningText: "Looking for build folders in your projects…",
             emptyText: "No build folders found",
-            emptyExplanation: "Preen looks in ~/Projects, ~/dev, ~/code, ~/apps and similar folders. Add your own in ~/.config/preen/purge_paths.",
-            heroCaption: "of rebuildable build folders selected" } },
+            heroCaption: "of rebuildable build folders", folders: true, stepText: "steps" } },
         installers: { url: "ScanPage.qml", props: {
             title: "Installers", command: "installer", applyText: "Remove",
             scanningText: "Looking for installer files…",
             emptyText: "No installer files",
             emptyExplanation: "Checked Downloads and Desktop for .deb, .rpm, .AppImage, .iso, .run and similar files.",
-            heroCaption: "of installer files selected" } },
+            heroCaption: "of installer files" } },
         maintenance: { url: "ScanPage.qml", props: {
             title: "Maintenance", command: "optimize", applyText: "Run",
             scanningText: "Checking system health…",
             emptyText: "Nothing to do",
-            heroCaption: "selected", countMode: true } },
+            heroCaption: "", countMode: true } },
         history: { url: "HistoryPage.qml", props: {} }
     })
 

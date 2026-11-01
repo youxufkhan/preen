@@ -17,6 +17,11 @@ Kirigami.ScrollablePage {
     property bool partial: false
     property bool loading: true
     property string pendingTrash: ""
+    property string status: ""
+    property int stepDone: 0
+    property int stepTotal: 0
+    property real filesSeen: 0
+    property real bytesSeen: 0
     readonly property real maxBytes: entries.length ? Math.max(1, entries[0].bytes) : 1
 
     title: path === "" ? "Disk" : path.split("/").pop() || "/"
@@ -25,6 +30,11 @@ Kirigami.ScrollablePage {
         loading = true
         entries = []
         largeFiles = []
+        status = "Starting"
+        stepDone = 0
+        stepTotal = 0
+        filesSeen = 0
+        bytesSeen = 0
         engine.run(path === "" ? ["analyze"] : ["analyze", path])
     }
 
@@ -38,7 +48,13 @@ Kirigami.ScrollablePage {
     Engine {
         id: engine
         onReceived: (e) => {
-            if (e.type === "entry") { // overview locations arrive one by one
+            if (e.type === "progress") {
+                page.status = e.message || page.status
+                page.stepDone = e.done || 0
+                page.stepTotal = e.total || 0
+                page.filesSeen = e.count || 0
+                page.bytesSeen = e.bytes || 0
+            } else if (e.type === "entry") { // folders arrive one by one as they finish
                 const list = page.entries.concat([e.data])
                 list.sort((a, b) => b.bytes - a.bytes)
                 page.entries = list
@@ -79,12 +95,18 @@ Kirigami.ScrollablePage {
     ]
 
     header: Hero {
-        busy: page.loading && page.entries.length === 0
-        value: page.path === "" ? (page.diskTotal > 0 ? Format.bytes(page.diskFree) + " free" : "")
-                                : Format.bytes(page.entries.reduce((s, x) => s + x.bytes, 0))
-        caption: page.loading ? "Measuring " + (page.path || "your disk") + "…"
+        busy: page.loading
+        progress: page.stepTotal > 0 ? page.stepDone / page.stepTotal : -1
+        value: page.loading ? (page.bytesSeen > 0 ? Format.bytes(page.bytesSeen) + " measured" : "")
+             : page.path === "" ? (page.diskTotal > 0 ? Format.bytes(page.diskFree) + " free" : "")
+             : Format.bytes(page.entries.reduce((s, x) => s + x.bytes, 0))
+        caption: page.loading ? page.status + "…"
                : page.path === "" ? "of " + Format.bytes(page.diskTotal) + " on your home disk · choose a location to look inside"
                : page.path + (page.partial ? " · some folders could not be read" : "")
+        detail: page.loading && page.stepTotal > 0
+                ? Format.count(page.filesSeen) + " files read · " + page.stepDone + " of " + page.stepTotal
+                  + (page.path === "" ? " locations" : " folders") + " done · sizes appear below as each one finishes"
+                : ""
     }
 
     ListView {

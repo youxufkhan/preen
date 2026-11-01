@@ -13,9 +13,34 @@ Kirigami.ScrollablePage {
     property var apps: []
     property string openedId: ""
     property bool loading: true
+    readonly property var sorts: [
+        { text: "Name", by: (a, b) => a.label.localeCompare(b.label) },
+        { text: "Size", by: (a, b) => (b.bytes || 0) - (a.bytes || 0) },
+        { text: "Least used", by: (a, b) => (a.last_used || 0) - (b.last_used || 0) },
+        { text: "Recently installed", by: (a, b) => (b.installed || 0) - (a.installed || 0) }
+    ]
     readonly property var shown: {
         const q = search.text.trim().toLowerCase()
-        return q === "" ? apps : apps.filter(a => a.label.toLowerCase().includes(q) || a.id.toLowerCase().includes(q))
+        const list = q === "" ? apps.slice() : apps.filter(a => a.label.toLowerCase().includes(q) || a.id.toLowerCase().includes(q))
+        return list.sort(sorts[sortBox.currentIndex].by)
+    }
+
+    function details(a) {
+        const parts = [a.group]
+        if (a.note)
+            parts.push(a.note)
+        else {
+            const used = Format.ago(a.last_used)
+            const inst = Format.ago(a.installed)
+            if (a.last_used && a.installed && a.last_used - a.installed < 86400)
+                parts.push("not opened since it was installed or updated " + inst)
+            else {
+                parts.push(used ? "used " + used : "no use recorded")
+                if (inst)
+                    parts.push("installed or updated " + inst)
+            }
+        }
+        return parts.join(" · ")
     }
 
     function load() {
@@ -51,9 +76,22 @@ Kirigami.ScrollablePage {
             color: Kirigami.Theme.backgroundColor
             Kirigami.Separator { anchors { left: parent.left; right: parent.right; bottom: parent.bottom } }
         }
-        contentItem: Kirigami.SearchField {
-            id: search
-            placeholderText: page.loading ? "Finding installed apps…" : "Search " + Format.plural(page.apps.length, "app")
+        contentItem: RowLayout {
+            spacing: Kirigami.Units.smallSpacing
+            Kirigami.SearchField {
+                id: search
+                placeholderText: page.loading ? "Finding installed apps…" : "Search " + Format.plural(page.apps.length, "app")
+                Layout.fillWidth: true
+            }
+            QQC2.Label {
+                text: "Sort by"
+                color: Kirigami.Theme.disabledTextColor
+            }
+            QQC2.ComboBox {
+                id: sortBox
+                model: page.sorts.map(s => s.text)
+                Layout.preferredWidth: Kirigami.Units.gridUnit * 10
+            }
         }
     }
 
@@ -103,7 +141,7 @@ Kirigami.ScrollablePage {
                         Layout.fillWidth: true
                     }
                     QQC2.Label {
-                        text: row.modelData.group + (row.modelData.note ? " · " + row.modelData.note : "")
+                        text: page.details(row.modelData)
                         color: Kirigami.Theme.disabledTextColor
                         font: Kirigami.Theme.smallFont
                         elide: Text.ElideRight

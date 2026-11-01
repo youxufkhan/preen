@@ -19,6 +19,8 @@ Kirigami.ScrollablePage {
     property bool countMode: false      // Maintenance: count tasks, not bytes
     property bool trash: false          // Uninstall: user files go to the Trash
     property string unit: countMode ? "task" : "item"
+    property string stepText: "checked"    // "19 of 44 checked"
+    property bool folders: false           // Projects: let the user choose the folders to scan
 
     signal applied()
 
@@ -35,6 +37,10 @@ Kirigami.ScrollablePage {
     property int failedCount: 0
     property real shownFreed: 0
     property real freeAfter: 0
+    property int stepDone: 0
+    property int stepTotal: 0
+    property real foundSoFar: 0
+    property var scanFolders: []
 
     function scan() {
         items.clear()
@@ -44,7 +50,12 @@ Kirigami.ScrollablePage {
         failedCount = 0
         phase = "scanning"
         status = scanningText
+        stepDone = 0
+        stepTotal = 0
+        foundSoFar = 0
         engine.run([command, "--dry-run"].concat(extraArgs))
+        if (folders)
+            pathsEngine.run(["purge", "--paths"])
     }
 
     function apply() {
@@ -56,6 +67,8 @@ Kirigami.ScrollablePage {
         }
         phase = "applying"
         status = rootSelected ? "Waiting for your password…" : "Working…"
+        stepDone = 0
+        stepTotal = 0
         engine.run(args.concat(extraArgs))
     }
 
@@ -87,7 +100,11 @@ Kirigami.ScrollablePage {
     function handle(e) {
         switch (e.type) {
         case "progress":
-            status = e.message
+            if (e.message)
+                status = e.message
+            stepDone = e.done || 0
+            stepTotal = e.total || 0
+            foundSoFar = e.bytes || 0
             break
         case "item": {
             if (phase !== "scanning")
@@ -153,9 +170,31 @@ Kirigami.ScrollablePage {
 
     ListModel { id: items }
 
+    Engine {
+        id: pathsEngine
+        onReceived: (e) => { if (e.type === "paths") page.scanFolders = e.data || [] }
+    }
+
+    ProjectFolders {
+        id: foldersDialog
+        onFoldersChanged: page.scan()
+    }
+
+    function folderList() {
+        const names = scanFolders.map(p => p.replace(/^\/home\/[^/]+/, "~"))
+        return names.length <= 3 ? names.join(", ") : names.slice(0, 3).join(", ") + " and " + (names.length - 3) + " more"
+    }
+
     Component.onCompleted: scan()
 
     actions: [
+        Kirigami.Action {
+            text: "Folders…"
+            icon.name: "folder-add"
+            visible: page.folders
+            enabled: page.phase !== "applying"
+            onTriggered: foldersDialog.open()
+        },
         Kirigami.Action {
             text: "Scan again"
             icon.name: "view-refresh"
@@ -170,6 +209,11 @@ Kirigami.ScrollablePage {
         Hero {
             Layout.fillWidth: true
             busy: page.phase === "scanning" || page.phase === "applying"
+            progress: page.stepTotal > 0 ? page.stepDone / page.stepTotal : -1
+            detail: page.phase === "scanning" && page.stepTotal > 0
+                    ? page.stepDone + " of " + page.stepTotal + " " + page.stepText
+                      + (page.foundSoFar > 0 ? " · " + Format.bytes(page.foundSoFar) + " found so far" : "")
+                    : page.phase === "ready" && page.folders && page.scanFolders.length > 0 ? "Searched " + page.folderList() : ""
             value: {
                 switch (page.phase) {
                 case "scanning": return ""
@@ -188,7 +232,7 @@ Kirigami.ScrollablePage {
                                     + (page.freeAfter > 0 ? " · " + Format.bytes(page.freeAfter) + " free on /" : "")
                 case "error": return ""
                 default: return page.foundCount === 0 ? "" : page.heroCaption + (page.heroCaption ? " · " : "")
-                                + page.selectedCount + " of " + Format.plural(page.foundCount, page.unit)
+                                + page.selectedCount + " of " + Format.plural(page.foundCount, page.unit) + " selected"
                 }
             }
 
@@ -314,8 +358,17 @@ Kirigami.ScrollablePage {
             visible: page.phase === "ready" && items.count === 0
             icon.name: "checkmark"
             text: page.emptyText
-            explanation: page.emptyExplanation
+            explanation: page.folders && page.scanFolders.length === 0 ? "No project folders are set. Add the folders where you keep code."
+                       : page.folders ? "Searched " + page.folderList() + "." : page.emptyExplanation
+            helpfulAction: page.folders ? foldersAction : null
         }
+    }
+
+    Kirigami.Action {
+        id: foldersAction
+        text: "Choose folders…"
+        icon.name: "folder-add"
+        onTriggered: foldersDialog.open()
     }
 
     Kirigami.Dialog {

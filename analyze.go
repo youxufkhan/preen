@@ -7,11 +7,13 @@ import (
 	"io/fs"
 	"os"
 	"path/filepath"
+	"slices"
 	"sort"
 	"strings"
 	"sync"
 	"sync/atomic"
 	"syscall"
+	"time"
 
 	"preen/internal/safe"
 )
@@ -96,6 +98,68 @@ func cmdAnalyze(args []string) error {
 	return nil
 }
 
+// Files and bytes seen by every scan in this process, for progress reports.
+var liveFiles, liveBytes atomic.Int64
+
+// tracker reports which folders are being measured, every 300 ms, until stop.
+type tracker struct {
+	mu      sync.Mutex
+	running []string
+	done    int
+	total   int
+	quit    chan struct{}
+}
+
+func newTracker(total int) *tracker {
+	t := &tracker{total: total, quit: make(chan struct{})}
+	go func() {
+		tick := time.NewTicker(300 * time.Millisecond)
+		defer tick.Stop()
+		for {
+			select {
+			case <-t.quit:
+				return
+			case <-tick.C:
+				t.report()
+			}
+		}
+	}()
+	return t
+}
+
+func (t *tracker) start(name string) {
+	t.mu.Lock()
+	t.running = append(t.running, name)
+	t.mu.Unlock()
+}
+
+func (t *tracker) finish(name string) {
+	t.mu.Lock()
+	t.running = slices.DeleteFunc(t.running, func(n string) bool { return n == name })
+	t.done++
+	t.mu.Unlock()
+}
+
+func (t *tracker) report() {
+	t.mu.Lock()
+	var msg string
+	switch n := len(t.running); {
+	case n == 0:
+		msg = "Finishing"
+	case n == 1:
+		msg = "Measuring " + t.running[0]
+	case n == 2:
+		msg = "Measuring " + t.running[0] + " and " + t.running[1]
+	default:
+		msg = fmt.Sprintf("Measuring %s, %s and %d more", t.running[0], t.running[1], n-2)
+	}
+	done, total := t.done, t.total
+	t.mu.Unlock()
+	progressN(msg, done, total, liveBytes.Load(), liveFiles.Load())
+}
+
+func (t *tracker) stop() { close(t.quit) }
+
 func maxI(a, b int64) int64 {
 	if a > b {
 		return a
@@ -104,16 +168,18 @@ func maxI(a, b int64) int64 {
 }
 
 func analyzeOverview() Analysis {
-	progress("Measuring overview locations")
 	a := Analysis{Path: home(), Overview: true}
 	a.DiskTotal, a.DiskFree = diskSpace(home())
 	res := make([]DirEntry, len(overview))
 	var wg sync.WaitGroup
 	var partial atomic.Bool
+	tr := newTracker(len(overview))
+	defer tr.stop()
 	for i, o := range overview {
 		wg.Add(1)
 		go func() {
 			defer wg.Done()
+			tr.start(o.label)
 			p := expand(o.path)
 			s := newScan(p)
 			s.walkParallel(p)
@@ -124,6 +190,7 @@ func analyzeOverview() Analysis {
 			if s.partial.Load() {
 				partial.Store(true)
 			}
+			tr.finish(o.label)
 		}()
 	}
 	wg.Wait()
@@ -140,7 +207,6 @@ func analyzeOverview() Analysis {
 
 // analyzeDir sizes each direct child of root in parallel and keeps the largest files.
 func analyzeDir(root string) Analysis {
-	progress("Scanning " + tildePath(root))
 	a := Analysis{Path: root}
 	a.DiskTotal, a.DiskFree = diskSpace(root)
 	s := newScan(root)
@@ -151,17 +217,24 @@ func analyzeDir(root string) Analysis {
 	res := make([]DirEntry, len(ents))
 	var wg sync.WaitGroup
 	sem := make(chan struct{}, 16)
+	tr := newTracker(len(ents))
+	defer tr.stop()
 	for i, e := range ents {
 		wg.Add(1)
 		go func() {
 			defer wg.Done()
 			sem <- struct{}{}
 			defer func() { <-sem }()
+			tr.start(e.Name())
 			p := filepath.Join(root, e.Name())
 			sub := s.child()
-			sub.walk(p)
+			sub.walkParallel(p)
 			s.merge(sub)
 			res[i] = DirEntry{Name: e.Name(), Path: p, Bytes: sub.bytes.Load(), IsDir: e.IsDir(), Files: sub.files.Load()}
+			if e.IsDir() {
+				emit(Event{Type: "entry", Data: res[i]}) // folders appear as they finish; files come with the result
+			}
+			tr.finish(e.Name())
 		}()
 	}
 	wg.Wait()
@@ -286,6 +359,7 @@ func (s *scan) walk(root string) {
 		size := st.Blocks * 512
 		if !d.IsDir() {
 			s.files.Add(1)
+			liveFiles.Add(1)
 		}
 		if !d.IsDir() && st.Nlink > 1 {
 			s.sh.mu.Lock()
@@ -302,6 +376,7 @@ func (s *scan) walk(root string) {
 			}
 		}
 		s.bytes.Add(size)
+		liveBytes.Add(size)
 		if !d.IsDir() && size >= largeFile {
 			s.sh.mu.Lock()
 			heap.Push(&s.sh.big, DirEntry{Name: d.Name(), Path: p, Bytes: size})

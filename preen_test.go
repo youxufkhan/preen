@@ -126,8 +126,15 @@ func TestDesktopParsing(t *testing.T) {
 	if !ok || d.name != "My App" || d.icon != "myapp" {
 		t.Fatalf("parsed %+v ok=%v", d, ok)
 	}
-	if got := execPath(`env FOO=1 /usr/bin/app --x`); got != "/usr/bin/app" {
-		t.Errorf("execPath = %q", got)
+	for in, want := range map[string]string{
+		`env FOO=1 /usr/bin/app --x`:             "/usr/bin/app",
+		`"/opt/YouTube Music/youtube-music" %U`:  "/opt/YouTube Music/youtube-music",
+		`pkexec /usr/bin/software-properties-qt`: "/usr/bin/software-properties-qt",
+		`"/opt/a \"b\"/run"`:                     `/opt/a "b"/run`,
+	} {
+		if got := execPath(in); got != want {
+			t.Errorf("execPath(%s) = %q, want %q", in, got, want)
+		}
 	}
 	os.WriteFile(p, []byte("[Desktop Entry]\nType=Application\nName=Hidden\nNoDisplay=true\n"), 0o644)
 	if _, ok := parseDesktop(p); ok {

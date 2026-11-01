@@ -21,9 +21,9 @@
 Clean, uninstall, analyze, and monitor Linux from one application. Preen is built for Ubuntu and Kubuntu and inspired by [Mole](https://github.com/tw93/mole) for macOS.
 
 - **Clean**: removes caches, logs, old snap versions, crash dumps, old kernels, browser and Electron app caches, and developer caches (uv, pnpm, npm, Bun, pip, Gradle, Cargo, Go).
-- **Uninstall**: removes apt, snap, Flatpak, and AppImage applications together with residual files. Configuration files remain unless specifically selected.
+- **Uninstall**: removes apt, snap, Flatpak, and AppImage applications together with residual files. Configuration files remain unless specifically selected. Sort by name, size, least used or recently installed.
 - **Disk**: inspects disk usage folder by folder and moves items to the Trash.
-- **Projects**: removes rebuildable `node_modules`, `target`, `build`, `.venv`, and similar build directories.
+- **Projects**: removes rebuildable `node_modules`, `target`, `build`, `.venv`, and similar build directories from the folders you choose (**Folders…** in the app, or `preen purge --add-path`).
 - **Installers**: cleans leftover `.deb`, `.rpm`, `.run`, `.AppImage`, and `.iso` files from Downloads and Desktop.
 - **Maintenance**: rebuilds font and application menu caches, flushes DNS, configures snap retention, and checks systemd service health.
 - **Overview**: reports CPU load, memory distribution, disk throughput, network traffic, battery health, thermal sensors, and active processes.
@@ -101,8 +101,8 @@ curl -fsSL https://youxufkhan.github.io/preen/install.sh | sh
 Or install the package manually on Ubuntu or Kubuntu:
 
 ```bash
-wget https://github.com/youxufkhan/preen/releases/download/v0.1.1/preen_0.1.1_amd64.deb
-sudo apt install ./preen_0.1.1_amd64.deb
+wget https://github.com/youxufkhan/preen/releases/download/v0.1.2/preen_0.1.2_amd64.deb
+sudo apt install ./preen_0.1.2_amd64.deb
 ```
 
 On other distributions, use the command-line engine on its own (`preen-linux-amd64` on the [releases page](https://github.com/youxufkhan/preen/releases)) or build from source (see Build below).
@@ -112,11 +112,12 @@ Then open **Preen** from the app menu, or use the terminal:
 ```bash
 preen clean --dry-run        # see what would be removed
 preen clean                  # remove the selected items (asks first)
-preen uninstall --list       # installed apps and their ids
+preen uninstall --list --sort used   # installed apps, least used first (or: size, installed)
 preen uninstall apt:btop --dry-run
 preen analyze ~              # what uses space in your home folder
 preen status --watch         # live dashboard
 preen purge --dry-run        # build folders in your projects
+preen purge --add-path ~/code   # also search ~/code (see: --paths, --remove-path)
 preen installer --dry-run    # installer files in Downloads
 preen optimize               # maintenance and health checks
 preen history                # what Preen removed

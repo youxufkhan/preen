@@ -9,7 +9,7 @@
 set -e
 
 REPO="youxufkhan/preen"
-FALLBACK_TAG="v0.1.1"
+FALLBACK_TAG="v0.1.2"
 
 # ANSI colors
 RED='\033[0;31m'

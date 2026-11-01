@@ -179,9 +179,11 @@ func cleanScan(wl []string) []*Item {
 		})
 	}
 
-	progress(fmt.Sprintf("Measuring %d locations", len(jobs)))
 	res := make([]*Item, len(jobs))
 	var wg sync.WaitGroup
+	var mu sync.Mutex
+	done, found := 0, int64(0)
+	progressN(fmt.Sprintf("Checking %d locations", len(jobs)), 0, len(jobs), 0, 0)
 	sem := make(chan struct{}, 6)
 	for i, f := range jobs {
 		wg.Add(1)
@@ -189,7 +191,17 @@ func cleanScan(wl []string) []*Item {
 			defer wg.Done()
 			sem <- struct{}{}
 			defer func() { <-sem }()
-			res[i] = f()
+			it := f()
+			res[i] = it
+			mu.Lock()
+			defer mu.Unlock()
+			done++
+			msg := "" // nothing here; keep showing the last location measured
+			if it != nil {
+				found += it.Bytes
+				msg = "Measured " + it.Label + " · " + human(it.Bytes)
+			}
+			progressN(msg, done, len(jobs), found, 0)
 		}()
 	}
 	wg.Wait()

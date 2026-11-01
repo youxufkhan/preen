@@ -27,3 +27,24 @@ function uptime(sec) {
 function plural(n, word) {
     return n === 1 ? "1 " + word : n + " " + word + "s"
 }
+
+// "today", "3 days ago", "5 months ago" for a unix time in seconds; "" when unknown.
+function ago(unix) {
+    if (!unix)
+        return ""
+    const d = Math.floor((Date.now() / 1000 - unix) / 86400)
+    if (d < 1)
+        return "today"
+    if (d === 1)
+        return "yesterday"
+    if (d < 60)
+        return d + " days ago"
+    if (d < 730)
+        return Math.floor(d / 30) + " months ago"
+    return Math.floor(d / 365) + " years ago"
+}
+
+// 1234567 → "1,234,567"
+function count(n) {
+    return String(Math.round(n || 0)).replace(/\B(?=(\d{3})+(?!\d))/g, ",")
+}

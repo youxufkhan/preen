@@ -10,6 +10,8 @@
     <file>qml/HistoryPage.qml</file>
     <file>qml/Hero.qml</file>
     <file>qml/Tile.qml</file>
+    <file>qml/HealthRing.qml</file>
+    <file>qml/ProjectFolders.qml</file>
     <file>qml/SizeBar.qml</file>
     <file>qml/Sparkline.qml</file>
     <file>qml/RiskBadge.qml</file>

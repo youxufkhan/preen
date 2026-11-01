@@ -158,16 +158,20 @@ func checkRemovablePackage(pkg string) error {
 	if !debName.MatchString(pkg) {
 		return fmt.Errorf("invalid package name %q", pkg)
 	}
-	if cmdOut("dpkg-query", "-W", "-f=${Package}\n", pkg) != pkg {
+	info := strings.Split(cmdOut("dpkg-query", "-W", "-f=${Package}|${db:Status-Abbrev}|${Priority}|${Essential}", pkg), "|")
+	if len(info) != 4 || info[0] != pkg || !strings.HasPrefix(info[1], "ii") {
 		return fmt.Errorf("%s is not installed", pkg)
+	}
+	if info[3] == "yes" || info[2] == "required" || info[2] == "important" || matchesAny(pkg, protectedPkgs) {
+		return fmt.Errorf("%s is part of the system and is not removed", pkg) // no need to ask apt
 	}
 	removed := simulateRemoval(pkg)
 	if len(removed) == 0 {
 		return fmt.Errorf("%s is not installed", pkg)
 	}
 	// Every package apt would take with it must pass the same checks as the named one.
-	info := cmdOutAny("dpkg-query", append([]string{"-W", "-f=${Package}|${db:Status-Abbrev}|${Priority}|${Essential}\n"}, removed...)...)
-	for _, l := range strings.Split(info, "\n") {
+	deps := cmdOutAny("dpkg-query", append([]string{"-W", "-f=${Package}|${db:Status-Abbrev}|${Priority}|${Essential}\n"}, removed...)...)
+	for _, l := range strings.Split(deps, "\n") {
 		f := strings.Split(l, "|")
 		if len(f) != 4 {
 			continue
