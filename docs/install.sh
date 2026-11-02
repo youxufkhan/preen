@@ -3,8 +3,8 @@
 # https://github.com/youxufkhan/preen
 #
 # Usage:
-#   curl -fsSL https://youxufkhan.github.io/preen/install.sh | sh
-#   curl -fsSL https://youxufkhan.github.io/preen/install.sh | sh -s -- --cli
+#   curl -fsSL https://preen.yousufkhan.uk/install.sh | sh
+#   curl -fsSL https://preen.yousufkhan.uk/install.sh | sh -s -- --cli
 
 set -e
 

@@ -1,4 +1,4 @@
 User-agent: *
 Allow: /
 
-Sitemap: https://youxufkhan.github.io/preen/sitemap.xml
+Sitemap: https://preen.yousufkhan.uk/sitemap.xml

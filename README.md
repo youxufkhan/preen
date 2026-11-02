@@ -8,7 +8,7 @@
   <a href="https://www.patreon.com/c/youxufkhan" target="_blank" rel="noopener noreferrer">
     <img src="https://img.shields.io/badge/Support_on_Patreon-FF424D?style=for-the-badge&logo=patreon&logoColor=white" alt="Support on Patreon" />
   </a>
-  <a href="https://youxufkhan.github.io/preen/" target="_blank" rel="noopener noreferrer">
+  <a href="https://preen.yousufkhan.uk/" target="_blank" rel="noopener noreferrer">
     <img src="https://img.shields.io/badge/Documentation-00e699?style=for-the-badge&logo=googlechrome&logoColor=04121a" alt="Documentation & Guide" />
   </a>
   <a href="https://github.com/youxufkhan/preen/releases/latest" target="_blank" rel="noopener noreferrer">
@@ -95,7 +95,7 @@ Preen does not yet do privacy cleaning, secure wiping, startup apps, duplicate f
 One-line installer (Ubuntu, Debian, Kubuntu, Arch, Fedora):
 
 ```bash
-curl -fsSL https://youxufkhan.github.io/preen/install.sh | sh
+curl -fsSL https://preen.yousufkhan.uk/install.sh | sh
 ```
 
 Or install the package manually on Ubuntu or Kubuntu:
@@ -157,3 +157,23 @@ Layout:
 ## License
 
 GPL-3.0. Preen is an independent project and is not affiliated with Mole.
+
+## Website hosting
+
+The documentation is hosted on Cloudflare Pages at
+[preen.yousufkhan.uk](https://preen.yousufkhan.uk/). The `preen` Pages project
+builds pushes to `main` with `python3 packaging/build-web.py` and publishes
+`dist/web`.
+
+To preview locally:
+
+```sh
+python3 packaging/build-web.py
+python3 -m http.server -d dist/web 8000
+```
+
+GitHub Pages at `https://youxufkhan.github.io/preen/` serves a redirect that
+preserves paths, query strings, and section anchors. The legacy `install.sh`
+remains available for existing curl commands. The Pages workflow waits for the
+same commit to be live on Cloudflare before publishing the redirect.
+The custom domain belongs to Cloudflare Pages; do not assign it to GitHub Pages.
